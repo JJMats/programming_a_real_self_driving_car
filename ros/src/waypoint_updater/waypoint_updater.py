@@ -6,6 +6,7 @@ from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
 
 import math
+import numpy as np
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -55,11 +56,11 @@ class WaypointUpdater(object):
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
                 # Get closest waypoint
-                closest_eaypoint_idx = self.get_closest_waypoint_idx()
+                closest_waypoint_idx = self.get_closest_waypoint_idx()
                 self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
         
-    def get_closest_waypoint_id(self):
+    def get_closest_waypoint_idx(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
         closest_idx = self.waypoint_tree.query([x, y], 1)[1]
@@ -74,8 +75,9 @@ class WaypointUpdater(object):
         pos_vect = np.array([x, y])
         
         val = np.dot(cl_vect-prev_vect, pos_vect-cl_vect)
-        
+                
         if val > 0:
+            # Waypoint is behind the vehicle, so increment forward by one
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
     
@@ -94,13 +96,15 @@ class WaypointUpdater(object):
         self.base_waypoints = waypoints
         
         if not self.waypoints_2d:
-            self.wayponts_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints.pose.pose.position]
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            print(len(self.waypoints_2d))
+            self.waypoint_tree = KDTree(self.waypoints_2d)
             
-            if self.waypoints_2d and len(self.waypoints_2d) > 0:
-                print("Self.waypoints_2d length:", len(self.waypoints_2d))
-                self.waypoint_tree = KDTree(self.waypoints_2d)
-            else:
-                print("Cannot configure KDTree")
+            #if self.waypoints_2d and len(self.waypoints_2d) > 0:
+            #    print("Self.waypoints_2d length:", len(self.waypoints_2d))
+            #    self.waypoint_tree = KDTree(self.waypoints_2d)
+            #else:
+            #    print("Cannot configure KDTree")
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
