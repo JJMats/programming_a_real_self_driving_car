@@ -35,8 +35,8 @@ class WaypointUpdater(object):
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         # **** Figure out what these datatypes are ****
-        #rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
-        #rospy.Subscriber('/obstacle_waypoint', Int32, self.obstacle_cb)
+        #rospy.Subscriber('/traffic_waypoint', ?, self.traffic_cb)
+        #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
@@ -46,8 +46,6 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoint_tree = None
 
-        #rospy.spin()
-        # **** Is this necessary if using spin? How do I declare the spin interval and what it should do? ****
         self.loop()
         
     # This may not be needed
@@ -97,14 +95,7 @@ class WaypointUpdater(object):
         
         if not self.waypoints_2d:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
-            print(len(self.waypoints_2d))
             self.waypoint_tree = KDTree(self.waypoints_2d)
-            
-            #if self.waypoints_2d and len(self.waypoints_2d) > 0:
-            #    print("Self.waypoints_2d length:", len(self.waypoints_2d))
-            #    self.waypoint_tree = KDTree(self.waypoints_2d)
-            #else:
-            #    print("Cannot configure KDTree")
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
