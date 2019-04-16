@@ -1,3 +1,4 @@
+#import rospy
 
 MIN_NUM = float('-inf')
 MAX_NUM = float('inf')
@@ -29,9 +30,13 @@ class PID(object):
             val = self.min
         else:
             self.int_val = integral
+        
         self.last_error = error
         
-        # rospy.logwarn("Throttle: {0}".format(val))
-        # rospy.logwarn("Velocity error: {0}".format(error))
+        #rospy.logwarn("Proportional: {0}".format(self.kp * error))
+        #rospy.logwarn("Integral: {0}".format(self.ki * integral))
+        #rospy.logwarn("Derivative: {0}".format(self.kd * derivative))
+        #rospy.logwarn("Throttle: {0}".format(val))
+        #rospy.logwarn("Velocity error: {0}".format(error))
 
         return val

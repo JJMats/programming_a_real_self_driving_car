@@ -2,6 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+#from std_msgs.msg import Int32
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
 
@@ -23,7 +24,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 150 # Number of waypoints we will publish. You can change this number
 
 
 class WaypointUpdater(object):
@@ -35,8 +36,8 @@ class WaypointUpdater(object):
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         # **** Figure out what these datatypes are ****
-        #rospy.Subscriber('/traffic_waypoint', ?, self.traffic_cb)
-        #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb)
+        #rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb) 
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
@@ -48,7 +49,6 @@ class WaypointUpdater(object):
 
         self.loop()
         
-    # This may not be needed
     def loop(self):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
@@ -61,9 +61,15 @@ class WaypointUpdater(object):
     def get_closest_waypoint_idx(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
+        
+        # Each waypoint in the waypoint_tree is stored as [position, index]
+        # The query() function will return the closest waypoint to [x, y], and
+        #  the "1" value specifies to return only one item. We are then taking
+        #  only the index ([1])
         closest_idx = self.waypoint_tree.query([x, y], 1)[1]
         
-        # Check if closest is ahead or behind vehicle
+        # Check if the closest waypoint is ahead of, or behind the vehicle
+        # We are looking for the waypoint in front of the vehicle here
         closest_coord = self.waypoints_2d[closest_idx]
         prev_coord = self.waypoints_2d[closest_idx-1]
         
@@ -73,15 +79,19 @@ class WaypointUpdater(object):
         pos_vect = np.array([x, y])
         
         val = np.dot(cl_vect-prev_vect, pos_vect-cl_vect)
+        # Alternatively, you can take the orientation of the vehicle, and the 
+        #  orientation of a vector from the previous waypoint to the current
+        #  waypoint and compare them to determine if they are facing in the 
+        #  same direction.
                 
         if val > 0:
-            # Waypoint is behind the vehicle, so increment forward by one
+            # Waypoint is behind the vehicle, so increment index forward by one
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
     
     def publish_waypoints(self, closest_idx):
         lane = Lane()
-        lane.header = self.base_waypoints.header
+        lane.header = self.base_waypoints.header # This is not being used, so it can be omitted if desired
         lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
         self.final_waypoints_pub.publish(lane)
 

@@ -9,9 +9,6 @@ ONE_MPH = 0.44704
 
 
 class Controller(object):
-    #def __init__(self, *args, **kwargs):
-        # TODO: Implement
-    #    pass
     
     def __init__(self, vehicle_mass, fuel_capacity, brake_deadband, decel_limit,
                  accel_limit, wheel_radius, wheel_base, steer_ratio, max_lat_accel, max_steer_angle):
@@ -22,7 +19,7 @@ class Controller(object):
         ki = 0.1
         kd = 0.0
         mn = 0.0 # Minimum throttle value
-        mx = 0.2 # Maximum throttle value
+        mx = 0.2 # Maximum throttle value, increase this if desired
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
         
         tau = 0.5 # 1/(2pi*tau) = cutoff frequency
@@ -38,13 +35,8 @@ class Controller(object):
         
         self.last_time = rospy.get_time()
 
-    #def control(self, *args, **kwargs):
-        # TODO: Change the arg, kwarg list to suit your needs
-        # Return throttle, brake, steer
-    #    return 1., 0., 0.
     
     def control(self, current_vel, dbw_enabled, linear_vel, angular_vel):
-        # Return throttle, brake, steer
         
         if not dbw_enabled:
             self.throttle_controller.reset()
@@ -52,14 +44,16 @@ class Controller(object):
         
         current_vel = self.vel_lpf.filt(current_vel)
         
-        # rospy.logwarn("Angular velocity: {0}".format(angular_vel))
-        # rospy.logwarn("Target velocity: {0}".format(linear)vel))
-        # rospy.logwarn("Target angular velocity: {0}\n".format(angular_vel))
-        # rospy.logwarn("Current velocity: {0}".format(current_vel))
-        # rospy.logwarn("Filtered velocity: {0}".format(self.vel_lpf.get()))
+        #rospy.logwarn("Angular velocity: {0}".format(angular_vel))
+        #rospy.logwarn("Target linear velocity: {0}".format(linear_vel))
+        #rospy.logwarn("Target angular velocity: {0}\n".format(angular_vel))
+        #rospy.logwarn("Current velocity: {0}".format(current_vel))
+        #rospy.logwarn("Filtered velocity: {0}".format(self.vel_lpf.get()))
         
         # **** Possibly add dampening terms below to reduce steering jerk when vehicle is wandering
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
+        
+        #rospy.logwarn("Steering: {0}".format(steering))
         
         vel_error = linear_vel - current_vel
         self.last_vel = current_vel
@@ -75,12 +69,10 @@ class Controller(object):
             throttle = 0
             # Changed from 400 Nm to 700 Nm per Udacity's specification of how much torque it would take
             #  to keep the vehicle stopped in gear with an automatic transmission
-            brake = 700 #N*m - to hold the c ar in place if we are stopped at a light. Acceleration ~ lm/s^2
+            brake = 700 #N*m - to hold the car in place if we are stopped at a light. Acceleration ~ lm/s^2
         elif throttle < 0.1 and vel_error < 0.0:
             throttle = 0
             decel = max(vel_error, self.decel_limit)
             brake = abs(decel)*self.vehicle_mass*self.wheel_radius # Torque N*m
-            
-        #throttle = 0.5
             
         return throttle, brake, steering
