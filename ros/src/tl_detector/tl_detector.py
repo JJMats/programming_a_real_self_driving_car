@@ -7,6 +7,7 @@ from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
+from scipy.spatial import KDTree
 import tf
 import cv2
 import yaml
@@ -43,7 +44,8 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        self.is_simulation = not self.config["is_site"]
+        self.light_classifier = TLClassifier(self.is_simulation)
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -53,15 +55,19 @@ class TLDetector(object):
 
         rospy.spin()
 
+        
     def pose_cb(self, msg):
         self.pose = msg
 
+        
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
 
+        
     def traffic_cb(self, msg):
         self.lights = msg.lights
 
+        
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
             of the waypoint closest to the red light's stop line to /traffic_waypoint
@@ -92,9 +98,11 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(light_wp))
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+            
         self.state_count += 1
+        
 
-    def get_closest_waypoint(self, pose):
+    def get_closest_waypoint(self, pose_x, pose_y):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
         Args:
@@ -105,8 +113,9 @@ class TLDetector(object):
 
         """
         #TODO implement
-        closest_idx = self.waypoint_tree.query([pose.x, pose.y], 1)[1]
+        closest_idx = self.waypoint_tree.query([pose_x, pose_y], 1)[1]
         return closest_idx
+    
 
     def get_light_state(self, light):
         """Determines the current color of the traffic light
@@ -120,7 +129,7 @@ class TLDetector(object):
         """
         
         # For testing, just return the light state
-        return light.state
+        #return light.state
     
         if(not self.has_image):
             self.prev_light_loc = None
@@ -131,6 +140,7 @@ class TLDetector(object):
         #Get classification
         return self.light_classifier.get_classification(cv_image)
 
+    
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
             location and color
