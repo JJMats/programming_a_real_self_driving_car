@@ -53,7 +53,7 @@ class WaypointUpdater(object):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.pose and self.base_lane:
-                self.publsih_waypoints()
+                self.publish_waypoints()
             rate.sleep()
 
             
@@ -89,7 +89,7 @@ class WaypointUpdater(object):
         return closest_idx
 
     
-    def publish_waypoints(self, closest_idx):
+    def publish_waypoints(self):
         final_lane = self.generate_lane()
         self.final_waypoints_pub.publish(final_lane)
 
