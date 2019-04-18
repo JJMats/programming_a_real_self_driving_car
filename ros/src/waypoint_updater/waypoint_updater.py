@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
-import rospy
-from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Int32
-from styx_msgs.msg import Lane, Waypoint
-from scipy.spatial import KDTree
-
 import math
 import numpy as np
+import rospy
+from geometry_msgs.msg import PoseStamped
+from scipy.spatial import KDTree
+from std_msgs.msg import Int32
+from styx_msgs.msg import Lane, Waypoint
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -32,28 +31,26 @@ class WaypointUpdater(object):
         rospy.init_node('waypoint_updater')
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below        
+        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        
         # **** Figure out what this datatype is. Do we need to create this message? ****
         #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb) 
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
-        self.pose = None
-        self.base_waypoints = None
-        self.waypoints_2d = None
-        self.waypoint_tree = None
         self.base_lane = None
+        self.pose = None
         self.stopline_wp_idx = -1
+        self.waypoints_2d = None
+        self.waypoint_tree = None        
         
         self.loop()
 
         
     def loop(self):
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.pose and self.base_lane:
                 self.publsih_waypoints()
@@ -114,7 +111,7 @@ class WaypointUpdater(object):
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at stop line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from stop line so front of car stops before stop line
         
         for i, wp in enumerate(waypoints):            
             p = Waypoint()
@@ -138,8 +135,7 @@ class WaypointUpdater(object):
         
     def waypoints_cb(self, waypoints):
         # TODO: Implement
-        self.base_waypoints = waypoints
-        
+        self.base_lane = waypoints        
         if not self.waypoints_2d:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
