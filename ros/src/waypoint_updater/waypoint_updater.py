@@ -24,8 +24,8 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 150 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 0.5 # Maximum deceleration rate to keep jerk below 10m/s^3
+LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
+MAX_DECEL = 1.0 # Maximum deceleration rate to keep jerk below 10m/s^3
 
 class WaypointUpdater(object):
     def __init__(self):        
@@ -46,27 +46,20 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoint_tree = None
-
-        # From Full Waypoint Walkthrough
         self.base_lane = None
         self.stopline_wp_idx = -1
         
         self.loop()
+
         
     def loop(self):
         rate = rospy.Rate(50)
-        while not rospy.is_shutdown():            
-            
-            #if self.pose and self.base_waypoints:
-            #    # Get closest waypoint
-            #    closest_waypoint_idx = self.get_closest_waypoint_idx()
-            #    self.publish_waypoints(closest_waypoint_idx)
-            
-            # From Full Waypoint Walkthrough
+        while not rospy.is_shutdown():
             if self.pose and self.base_lane:
                 self.publsih_waypoints()
             rate.sleep()
-        
+
+            
     def get_closest_waypoint_idx(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
@@ -97,17 +90,13 @@ class WaypointUpdater(object):
             # Waypoint is behind the vehicle, so increment index forward by one
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
+
     
     def publish_waypoints(self, closest_idx):
-        #lane = Lane()
-        #lane.header = self.base_waypoints.header # This is not being used, so it can be omitted if desired
-        #lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
-        #self.final_waypoints_pub.publish(lane)
-        
-        # From Full Waypoint Walkthrough
         final_lane = self.generate_lane()
         self.final_waypoints_pub.publish(final_lane)
 
+        
     def generate_lane(self):
         lane = Lane()
         
@@ -122,14 +111,14 @@ class WaypointUpdater(object):
             
         return lane
     
+    
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        for i, wp in enumerate(waypoints):
-            
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at stop line
+        
+        for i, wp in enumerate(waypoints):            
             p = Waypoint()
-            p.pose = wp.pose
-            
-            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at stop line
+            p.pose = wp.pose            
             dist = self.distance(waypoints, i, stop_idx)
             # Possibly change the following function to smooth the initial deceleration and final deceleration rates
             vel = math.sqrt(2 * MAX_DECEL * dist)
@@ -146,6 +135,7 @@ class WaypointUpdater(object):
         # TODO: Implement
         self.pose = msg
 
+        
     def waypoints_cb(self, waypoints):
         # TODO: Implement
         self.base_waypoints = waypoints
@@ -154,20 +144,25 @@ class WaypointUpdater(object):
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
 
+            
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         self.stopline_wp_idx = msg.data
 
+        
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
         pass
 
+    
     def get_waypoint_velocity(self, waypoint):
         return waypoint.twist.twist.linear.x
 
+    
     def set_waypoint_velocity(self, waypoints, waypoint, velocity):
         waypoints[waypoint].twist.twist.linear.x = velocity
 
+        
     def distance(self, waypoints, wp1, wp2):
         dist = 0
         dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2  + (a.z-b.z)**2)
