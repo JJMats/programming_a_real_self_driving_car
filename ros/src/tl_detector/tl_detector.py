@@ -45,8 +45,7 @@ class TLDetector(object):
 
         self.bridge = CvBridge()
         self.is_simulation = not self.config["is_site"]
-        #self.light_classifier = TLClassifier(self.is_simulation)
-        self.light_classifier = TLClassifier()
+        self.light_classifier = TLClassifier(self.is_simulation)
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -128,15 +127,11 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        
-        # For testing, just return the light state
-        #return light.state
-    
         if(not self.has_image):
             self.prev_light_loc = None
             return False
 
-        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
 
         #Get classification
         return self.light_classifier.get_classification(cv_image)
@@ -151,9 +146,15 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+         
+
         closest_light = None
         line_wp_idx = None
                 
+        # for debuging only
+        # state = self.get_light_state(None)
+        # return line_wp_idx, state
+
         #light = None
 
         # List of positions that correspond to the line to stop in front of for a given intersection
