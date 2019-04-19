@@ -20,6 +20,7 @@ class TLDetector(object):
 
         self.pose = None
         self.waypoints = None
+        self.waypoint_tree = None
         self.camera_image = None
         self.lights = []
 
@@ -63,6 +64,9 @@ class TLDetector(object):
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
 
+        waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+        self.waypoint_tree = KDTree(waypoints_2d)
+
         
     def traffic_cb(self, msg):
         self.lights = msg.lights
@@ -76,10 +80,11 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        self.has_image = True
+        self.has_image = True        
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
-
+        #rospy.logwarn("In image_cb, state: {0}".format(state))
+        
         '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
@@ -152,8 +157,8 @@ class TLDetector(object):
         line_wp_idx = None
                 
         # for debuging only
-        # state = self.get_light_state(None)
-        # return line_wp_idx, state
+        #state = self.get_light_state(None)
+        #return line_wp_idx, state
 
         #light = None
 
@@ -175,9 +180,12 @@ class TLDetector(object):
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx
-                    
+        
+        #rospy.logwarn("Closest_light: {0}".format(closest_light))
+        
         if closest_light:
             state = self.get_light_state(closest_light)
+            #rospy.logwarn("Light state: {0}".format(state))
             return line_wp_idx, state
         
         #if light:
