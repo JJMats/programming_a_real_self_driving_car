@@ -13,6 +13,8 @@ import cv2
 import yaml
 
 STATE_COUNT_THRESHOLD = 3
+#IMAGE_COUNT_THRESHOLD = 4
+DIFF_THRESHOLD = 50
 
 class TLDetector(object):
     def __init__(self):
@@ -53,6 +55,9 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        self.image_count = -1
+        self.has_image = False
+        self.image_count_thres = 4
 
         rospy.spin()
 
@@ -80,32 +85,45 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        self.has_image = True        
-        self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
-        #rospy.logwarn("In image_cb, state: {0}".format(state))
         
-        '''
-        Publish upcoming red lights at camera frequency.
-        Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-        of times till we start using it. Otherwise the previous stable state is
-        used.
-        '''
-        if self.state != state:
-            self.state_count = 0
-            self.state = state
-        elif self.state_count >= STATE_COUNT_THRESHOLD:
-            self.last_state = self.state
-            # Only store traffic light waypoints if the light is red (otherwise, drive through)
-            # Possibly update this code to account for yellow or stale green lights
-            light_wp = light_wp if state == TrafficLight.RED else -1
-            self.last_wp = light_wp
-            self.upcoming_red_light_pub.publish(Int32(light_wp))
-        else:
-            self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+        self.image_count += 1
+        
+        light_wp = None
+        
+
+        print("imageID:{0}".format(self.image_count))
+        if self.image_count%self.image_count_thres==0:
+            print(self.image_count, self.image_count_thres)
+            self.has_image = True        
+            self.camera_image = msg
+            light_wp, state = self.process_traffic_lights()
+       
             
-        self.state_count += 1
-        
+            #rospy.logwarn("In image_cb, state: {0}".format(state))
+            
+            '''
+            Publish upcoming red lights at camera frequency.
+            Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
+            of times till we start using it. Otherwise the previous stable state is
+            used.
+            '''
+            if self.state != state:
+                self.state_count = 0
+                self.state = state
+            elif self.state_count >= STATE_COUNT_THRESHOLD:
+                self.last_state = self.state
+                # Only store traffic light waypoints if the light is red (otherwise, drive through)
+                # Possibly update this code to account for yellow or stale green lights
+                light_wp = light_wp if state == TrafficLight.RED else -1
+                self.last_wp = light_wp
+                self.upcoming_red_light_pub.publish(Int32(light_wp))
+            else:
+                self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+                
+            self.state_count += 1
+        else:
+            state = self.state
+            light_wp = None        
 
     def get_closest_waypoint(self, pose_x, pose_y):
         """Identifies the closest path waypoint to the given position
@@ -119,6 +137,7 @@ class TLDetector(object):
         """
         #TODO implement
         closest_idx = self.waypoint_tree.query([pose_x, pose_y], 1)[1]
+        
         return closest_idx
     
 
@@ -139,6 +158,7 @@ class TLDetector(object):
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
 
         #Get classification
+        print('running the Clf')
         return self.light_classifier.get_classification(cv_image)
 
     
@@ -181,6 +201,15 @@ class TLDetector(object):
                     closest_light = light
                     line_wp_idx = temp_wp_idx
         
+            
+            if diff>DIFF_THRESHOLD:
+                self.image_count_thres = 8
+            else:
+                self.image_count_thres = 4
+                
+            
+            print('closest light:', diff, self.image_count_thres)
+ 
         #rospy.logwarn("Closest_light: {0}".format(closest_light))
         
         if closest_light:
