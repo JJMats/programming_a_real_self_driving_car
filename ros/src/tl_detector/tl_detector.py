@@ -91,9 +91,9 @@ class TLDetector(object):
         light_wp = None
         
 
-        print("imageID:{0}".format(self.image_count))
+        #print("imageID:{0}".format(self.image_count))
         if self.image_count%self.image_count_thres==0:
-            print(self.image_count, self.image_count_thres)
+            #print(self.image_count, self.image_count_thres)
             self.has_image = True        
             self.camera_image = msg
             light_wp, state = self.process_traffic_lights()
@@ -212,7 +212,7 @@ class TLDetector(object):
  
         #rospy.logwarn("Closest_light: {0}".format(closest_light))
         
-        if closest_light:
+        if closest_light and diff<DIFF_THRESHOLD:
             state = self.get_light_state(closest_light)
             #rospy.logwarn("Light state: {0}".format(state))
             return line_wp_idx, state
