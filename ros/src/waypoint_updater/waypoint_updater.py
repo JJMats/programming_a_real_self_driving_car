@@ -24,7 +24,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 0.5 # Maximum deceleration rate to keep jerk below 10m/s^3
+MAX_DECEL = 2.5 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
 
 class WaypointUpdater(object):
     def __init__(self):        
@@ -101,7 +101,7 @@ class WaypointUpdater(object):
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
         
-        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
+        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx > farthest_idx):
             lane.waypoints = base_waypoints
         else:
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
@@ -111,34 +111,33 @@ class WaypointUpdater(object):
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 3, 0) # Three waypoints back from stop line so front of car stops before stop line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0) # Four waypoints back from stop line so front of car stops before stop line
         
         #rospy.logwarn("")
-        #rospy.logwarn("*** Calculating decel waypoints:")
+        #rospy.logwarn("*** Calculating decel waypoints: Stopline idx: {0}, Closest idx:{1}, Stop idx: {2}".format(self.stopline_wp_idx, closest_idx, stop_idx))
         for i, wp in enumerate(waypoints):            
             p = Waypoint()
-            p.pose = wp.pose            
+            p.pose = wp.pose
+            braking_vel = 0.0         
             dist = self.distance(waypoints, i, stop_idx)
             
+            if dist > 0.0:
+                
             # Possibly change the following function to smooth the initial deceleration and final deceleration rates
             #rospy.logwarn("Dist: {0}, MAX_DECEL: {1}".format(dist,MAX_DECEL))
-            time_to_complete_stop = math.sqrt(dist * 2.0 / MAX_DECEL)
-            braking_vel = 0.0
-            if time_to_complete_stop > 0.0:
+                time_to_complete_stop = math.sqrt(dist * 2.0 / MAX_DECEL)
                 braking_vel = 2.0 * dist / time_to_complete_stop
                 
                 if braking_vel < 0.1:
                     braking_vel = 0.0
             
-            # Add thresholds for smoothing initial and final decel rates?
-
             # Original function
             #vel = math.sqrt(2 * MAX_DECEL * dist)
             #if vel < 0.5:
             #    vel = 0.0
 
-            if braking_vel > 0.0:
-                rospy.logwarn("Time to stop: {0}, dist: {1}, braking_vel: {2}, linear_x: {3}".format(time_to_complete_stop,dist,braking_vel,wp.twist.twist.linear.x))
+            #if braking_vel > 0.0:
+            #    rospy.logwarn("WP idx: {0}, Time to stop: {1}, dist: {2}, braking_vel: {3}, linear_x: {4}".format(i,time_to_complete_stop,dist,braking_vel,wp.twist.twist.linear.x))
             
             # Take minimum velocity of braking_velocity and maximum velocity to prevent
             #   velocity changes over the maximum velocity at large dist values.
