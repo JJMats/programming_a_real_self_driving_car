@@ -24,21 +24,6 @@ class TLDetector(object):
         self.camera_image = None
         self.lights = []
 
-        sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        '''
-        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
-        helps you acquire an accurate ground truth data source for the traffic light
-        classifier by sending the current color state of all traffic lights in the
-        simulator. When testing on the vehicle, the color state will not be available. You'll need to
-        rely on the position of the light and the camera image to predict it.
-        '''
-        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        
-        # We may want to use image_raw here to prevent loss of data when changing color schemes
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
-
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
@@ -53,6 +38,21 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+
+        sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+
+        '''
+        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
+        helps you acquire an accurate ground truth data source for the traffic light
+        classifier by sending the current color state of all traffic lights in the
+        simulator. When testing on the vehicle, the color state will not be available. You'll need to
+        rely on the position of the light and the camera image to predict it.
+        '''
+        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+        
+        # We may want to use image_raw here to prevent loss of data when changing color schemes
+        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
         rospy.spin()
 
@@ -152,18 +152,18 @@ class TLDetector(object):
 
         """
          
-
         closest_light = None
         line_wp_idx = None
                 
         # for debuging only
-        #state = self.get_light_state(None)
-        #return line_wp_idx, state
+        # state = self.get_light_state(None)
+        # return line_wp_idx, state
 
         #light = None
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
+        
         if(self.pose):
             #car_position = self.get_closest_waypoint(self.pose.pose)
             car_wp_idx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
@@ -182,7 +182,6 @@ class TLDetector(object):
                     line_wp_idx = temp_wp_idx
         
         #rospy.logwarn("Closest_light: {0}".format(closest_light))
-        
         if closest_light:
             state = self.get_light_state(closest_light)
             #rospy.logwarn("Light state: {0}".format(state))
