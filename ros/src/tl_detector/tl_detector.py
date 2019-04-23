@@ -14,7 +14,7 @@ import yaml
 
 STATE_COUNT_THRESHOLD = 3
 #IMAGE_COUNT_THRESHOLD = 4
-DIFF_THRESHOLD = 50
+DIFF_THRESHOLD = 80
 
 class TLDetector(object):
     def __init__(self):
@@ -175,6 +175,7 @@ class TLDetector(object):
 
         closest_light = None
         line_wp_idx = None
+        light_in_range = False
                 
         # for debuging only
         #state = self.get_light_state(None)
@@ -202,17 +203,22 @@ class TLDetector(object):
                     line_wp_idx = temp_wp_idx
         
             
-            if diff>DIFF_THRESHOLD:
-                self.image_count_thres = 8
+            if diff > DIFF_THRESHOLD:
+                self.image_count_thres = 10
             else:
-                self.image_count_thres = 4
+                light_in_range = True
+                if diff < DIFF_THRESHOLD / 2:
+                    # Try to get a faster reaction time to light changes when close
+                    self.image_count_thres = 1
+                else:
+                    self.image_count_thres = 2
                 
             
             print('closest light:', diff, self.image_count_thres)
  
         #rospy.logwarn("Closest_light: {0}".format(closest_light))
         
-        if closest_light and diff<DIFF_THRESHOLD:
+        if closest_light and light_in_range:
             state = self.get_light_state(closest_light)
             #rospy.logwarn("Light state: {0}".format(state))
             return line_wp_idx, state

@@ -10,7 +10,7 @@ class TLClassifier(object):
         if is_simulation:
             self.MODEL_NAME = 'light_classification/frozen-ssd_inception-simulation'
         else:
-            self.MODEL_NAME = 'light_classification/frozen-ssd_inception-simulation'
+            self.MODEL_NAME = 'light_classification/frozen-ssd_inception-site'
 
         self.PATH_TO_FROZEN_GRAPH = self.MODEL_NAME + '/frozen_inference_graph.pb'
 
@@ -33,7 +33,7 @@ class TLClassifier(object):
  
         self.session = tf.Session(graph=self.detection_graph)
         self.threshold = 0.5
-        pass
+    
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
