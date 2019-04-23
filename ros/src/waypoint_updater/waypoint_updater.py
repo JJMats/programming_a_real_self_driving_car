@@ -111,13 +111,15 @@ class WaypointUpdater(object):
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 3, 0) # Two waypoints back from stop line so front of car stops before stop line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 3, 0) # Three waypoints back from stop line so front of car stops before stop line
+        
         #rospy.logwarn("")
         #rospy.logwarn("*** Calculating decel waypoints:")
         for i, wp in enumerate(waypoints):            
             p = Waypoint()
             p.pose = wp.pose            
             dist = self.distance(waypoints, i, stop_idx)
+            
             # Possibly change the following function to smooth the initial deceleration and final deceleration rates
             #rospy.logwarn("Dist: {0}, MAX_DECEL: {1}".format(dist,MAX_DECEL))
             time_to_complete_stop = math.sqrt(dist * 2.0 / MAX_DECEL)
@@ -127,16 +129,10 @@ class WaypointUpdater(object):
                 
                 if braking_vel < 0.1:
                     braking_vel = 0.0
-
-            #vel = braking_vel
             
-            # Take minimum velocity min(vel, braking_vel), which would adjust decel distance for vehicle speed
-            #vel = min(braking_vel, 11.175) # ****Change this to get vehicle maximum velocity (use another subscriber?)
+            # Add thresholds for smoothing initial and final decel rates?
 
-            # Add thresholds for smoothing initial and final decel rates
-
-
-            
+            # Original function
             #vel = math.sqrt(2 * MAX_DECEL * dist)
             #if vel < 0.5:
             #    vel = 0.0
@@ -144,6 +140,8 @@ class WaypointUpdater(object):
             if braking_vel > 0.0:
                 rospy.logwarn("Time to stop: {0}, dist: {1}, braking_vel: {2}, linear_x: {3}".format(time_to_complete_stop,dist,braking_vel,wp.twist.twist.linear.x))
             
+            # Take minimum velocity of braking_velocity and maximum velocity to prevent
+            #   velocity changes over the maximum velocity at large dist values.
             p.twist.twist.linear.x = min(braking_vel, wp.twist.twist.linear.x)
             temp.append(p)
             
