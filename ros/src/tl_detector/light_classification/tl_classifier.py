@@ -45,7 +45,7 @@ class TLClassifier(object):
  
         self.session = tf.Session(graph=self.detection_graph)
         self.threshold = 0.5
-        pass
+    
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -57,16 +57,13 @@ class TLClassifier(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+
         # convert to rgb image
         #image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
         image_rgb = image
 
-
-
-
-
         '''
-	# image normalization
+	      # image normalization
         img_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
 
         # equalize the histogram of the Y channel
@@ -117,4 +114,3 @@ class TLClassifier(object):
                 return TrafficLight.YELLOW
 
         return TrafficLight.UNKNOWN
-
