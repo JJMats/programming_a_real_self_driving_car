@@ -15,7 +15,6 @@ import yaml
 STATE_COUNT_THRESHOLD = 3
 DIFF_THRESHOLD = 100
 
-
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
@@ -25,21 +24,6 @@ class TLDetector(object):
         self.waypoint_tree = None
         self.camera_image = None
         self.lights = []
-        
-        sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        '''
-        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
-        helps you acquire an accurate ground truth data source for the traffic light
-        classifier by sending the current color state of all traffic lights in the
-        simulator. When testing on the vehicle, the color state will not be available. You'll need to
-        rely on the position of the light and the camera image to predict it.
-        '''
-        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        
-        # We may want to use image_raw here to prevent loss of data when changing color schemes
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -58,6 +42,25 @@ class TLDetector(object):
         self.image_count = -1
         self.has_image = False
         self.image_count_thres = 4
+
+        sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+
+        '''
+        /vehicle/traffic_lights provides you with the location of the traffic light in 3D map space and
+        helps you acquire an accurate ground truth data source for the traffic light
+        classifier by sending the current color state of all traffic lights in the
+        simulator. When testing on the vehicle, the color state will not be available. You'll need to
+        rely on the position of the light and the camera image to predict it.
+        '''
+        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+        sub6 = None
+
+        # We may want to use image_raw here to prevent loss of data when changing color schemes
+        if self.is_simulation:
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        else:
+            sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
 
         rospy.spin()
 
