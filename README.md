@@ -1,3 +1,82 @@
+# Capstone Project – Programming A Real Self-Driving Car
+
+## Team RobotCar
+
+< Insert header image here >
+
+In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. 
+
+< Make the following a table >
+
+
+## Team Members 
+
+Jeremy Matson – matsonjjl at gmail dot com
+Mario Luder – monsieur dot mona at gmail dot com
+Emilio Moyers – emoyersb at gmail dot com
+Yang Sun – jonathan dot eric dot sun at gmail dot com
+
+< Insert architecture image here >
+
+
+## Vehicle Subsystems
+
+Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS).
+
+
+### Planning
+
+The first subsystem to implement was the Planning subsystem. It consists of the Waypoint Loader and the Waypoint Updater nodes.
+
+#### Waypoint Loader
+The Waypoint Loader node loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
+
+#### Waypoint Updater
+The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
+
+< Insert image here of vehicle on simulator track with waypoint trail >
+
+
+### Control
+
+The Control Subsystem was the next to implement. It consists of the Drive-By-Wire (Twist Controller) and Waypoint Follower nodes.
+
+#### DBW Node
+
+The DBW node (*/twist_controller/dbw_node.py*) is responsible for providing new proposed linear and angular velocities to allow the vehicle to maintain the path planned by the Waypoint Updater node. It consists of PID controller functions for throttle control (*twist_controller.py, pid.py*) and a smoothing braking function, a yaw-controller (*yaw_controller.py*) to adjust heading direction, and a low-pass filter to reduce sensor noise (*lowpass.py*).
+<Insert image of car on “test” track following waypoints>
+
+#### Waypoint Follower
+
+The Waypoint Follower node (*/waypoint_follower/waypoint_follower.py*) is Autoware code that is responsible for outputting the control commands to the vehicle that have been provided by the DBW node.
+
+
+### Perception
+
+The perception subsystem consists of a Traffic Light Detector. Note: The Obstacle Detection node has not been implemented but has been framed for future use.
+
+#### Traffic Light Detector
+
+The Traffic Light Detection node (*/tl_detector*) consists of a light detector, and a classifier. The Light Detector (*tl_detector.py*) subscribes to images published by the vehicle’s forward-facing camera, dynamically adjusts the image processing rate, sends images to the classifier for light state detection (RED, YELLOW, GREEN, or UNKNOWN), and publishes the location of the stop line for the detected stop light for the Planning Subsystem to act upon in the event of a RED light.
+
+#### Traffic Light Classifier
+
+The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed.
+
+[Inception Model]https://arxiv.org/abs/1512.00567
+
+< Insert image of classifier architecture here >
+
+Image classification certainty tended to be quite high… 
+
+< Insert images of detected traffic lights here >
+
+
+## Known Issues
+
+
+# Installation Instructions
+
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
 Please use **one** of the two installation options, either native **or** docker installation.
