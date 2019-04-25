@@ -18,7 +18,6 @@ class TLClassifier(object):
         self.bridge = CvBridge()
         '''
 
-
         if is_simulation:
             self.MODEL_NAME = 'light_classification/frozen-ssd_inception-simulation'
         else:
