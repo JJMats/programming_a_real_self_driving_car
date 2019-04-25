@@ -60,7 +60,8 @@ class TLDetector(object):
         if self.is_simulation:
             sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
         else:
-            sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+            #sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
 
         rospy.spin()
 
