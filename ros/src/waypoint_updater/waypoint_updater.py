@@ -28,23 +28,23 @@ MAX_DECEL = 2.5 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
 
 class WaypointUpdater(object):
     def __init__(self):        
-        rospy.init_node('waypoint_updater')
-
-        rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
-        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
-        
-        # **** Figure out what this datatype is. Do we need to create this message? ****
-        #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb) 
-
-        self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
+        rospy.init_node('waypoint_updater')        
 
         # TODO: Add other member variables you need below
         self.base_lane = None
         self.pose = None
         self.stopline_wp_idx = -1
         self.waypoints_2d = None
-        self.waypoint_tree = None        
+        self.waypoint_tree = None
+
+        self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)    
+
+        rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        
+        # **** Figure out what this datatype is. Do we need to create this message? ****
+        #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb)          
         
         self.loop()
 
