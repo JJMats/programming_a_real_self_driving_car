@@ -6,13 +6,11 @@
 
 In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. 
 
-< Make the following a table >
-
 
 ## Team Members 
 
 | Name | E-mail | @ Domain | . TLD |
-| --- | --- | --- | --- |
+| :---: | :---: | :---: | :---: |
 | Jeremy Matson | matsonjjl | gmail | com |
 | Mario Luder | monsieur.mona | gmail | com |
 | Emilio Moyers | emoyersb | gmail | com |
