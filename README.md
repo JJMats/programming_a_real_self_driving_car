@@ -5,7 +5,7 @@
 ![Header Image Carla](imgs/header.jpeg)
 ###### *Udacity. "Carla" Udacity.com*
 
-In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop at "red" traffic lights.
+In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop at red illuminated traffic lights.
 
 <br />
 
@@ -14,7 +14,7 @@ In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked 
 | Name | E-mail | @ Domain | . TLD |
 | :---: | :---: | :---: | :---: |
 | Jeremy Matson | matsonjjl | gmail | com |
-| Mario Luder | monsieur.mona | gmail | com |
+| Mario Lüder | monsieur.mona | gmail | com |
 | Emilio Moyers | emoyersb | gmail | com |
 | Yang Sun | jonathan.eric.sun | gmail | com |
 
@@ -34,12 +34,16 @@ Three major subsystems were configured to communicate with each other utilizing 
 The first subsystem to implement was the Planning subsystem. It consists of the Waypoint Loader and the Waypoint Updater nodes.
 
 #### Waypoint Loader
+
 The Waypoint Loader node (*/waypoint_loader*) loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
 
 <img src="imgs/sim_start.png" width="600" alt="Simulator Start">
 
 #### Waypoint Updater
-The Waypoint Updater node (*/waypoint_updater*) is responsible for adjusting the longitudinal velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
+
+The Waypoint Updater node (*/waypoint_updater*) is responsible for adjusting the longitudinal velocity component of the waypoints to account for deceleration events. These events are determined by the Control and Perception subsystems.
+
+As braking events are demanded when a RED traffic light is detected, the function implemented in this node starts by calculating the distance of each waypoint from the vehicle to the target stop line for the traffic light. Then, the time required to decelerate to a complete stop is calculated based upon the maximum deceleration rate configured for limiting jerk and passenger discomfort. Finally, the target velocity under braking is calculated and applied to each waypoint. This allows for a linear adaptive braking function that can scale with vehicle velocity.
 
 <img src="imgs/sim_run.png" width="600" alt="Simulator Waypoints">
 
@@ -51,13 +55,15 @@ The Control Subsystem was the next to implement. It consists of the Drive-By-Wir
 
 #### DBW Node
 
-The DBW node (*/twist_controller/dbw_node.py*) is responsible for providing new proposed linear and angular velocities to allow the vehicle to maintain the path planned by the Waypoint Updater node. It consists of PID controller functions for throttle control (*twist_controller.py, pid.py*) and a smoothing braking function, a yaw-controller (*yaw_controller.py*) to adjust heading direction, and a low-pass filter to reduce sensor noise (*lowpass.py*).
+The DBW node (*/dbw_node.py*) is responsible for providing new proposed linear and angular velocities to allow the vehicle to maintain the path planned by the Waypoint Updater node. It consists of PID controller functions for throttle control (*twist_controller.py, pid.py*), a brake torque calculation, a yaw-controller (*yaw_controller.py*) to adjust heading direction, and a low-pass filter to reduce sensor noise (*lowpass.py*).
+
+The braking function implemented calculates the distance 
 
 <img src="imgs/pid_test.png" width="600" alt="PID Test Waypoint Following">
 
 #### Waypoint Follower
 
-The Waypoint Follower node (*/waypoint_follower/waypoint_follower.py*) is Autoware code that is responsible for outputting the control commands to the vehicle that have been provided by the DBW node.
+The Waypoint Follower node (*/waypoint_follower.py*) is Autoware open-source code that is responsible for outputting the control commands to the vehicle that have been provided by the DBW node.
 
 <br />
 
@@ -73,7 +79,7 @@ The Traffic Light Detection node (*/tl_detector*) consists of a light detector, 
 
 #### Traffic Light Classifier
 
-The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed. This model performed very well for our application.
+The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the **“Single Shot Detection Inception V2”** algorithm, which offers better performance than the **“Single Shot Detection Mobilenet V1”** algorithm, at a slight expense of speed. This model performed very well for our application.
 
 Additional information on the SSD Inception V2 Model can be found at:
 
