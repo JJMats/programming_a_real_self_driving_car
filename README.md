@@ -34,16 +34,12 @@ The first subsystem to implement was the Planning subsystem. It consists of the 
 #### Waypoint Loader
 The Waypoint Loader node loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
 
-<div style="text-align:center">
-  <img src="imgs/sim_start.png" width="600" alt="Simulator Start">
-</div>
+<img src="imgs/sim_start.png" width="600" alt="Simulator Start">
 
 #### Waypoint Updater
 The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
 
-<div style="text-align:center">
-  <img src="imgs/sim_run.png" width="600" alt="Simulator Waypoints">
-</div>
+<img src="imgs/sim_run.png" width="600" alt="Simulator Waypoints">
 
 ### Control
 
@@ -53,9 +49,7 @@ The Control Subsystem was the next to implement. It consists of the Drive-By-Wir
 
 The DBW node (*/twist_controller/dbw_node.py*) is responsible for providing new proposed linear and angular velocities to allow the vehicle to maintain the path planned by the Waypoint Updater node. It consists of PID controller functions for throttle control (*twist_controller.py, pid.py*) and a smoothing braking function, a yaw-controller (*yaw_controller.py*) to adjust heading direction, and a low-pass filter to reduce sensor noise (*lowpass.py*).
 
-<div style="text-align:center">
-  <img src="imgs/pid_test.png" width="600" alt="PID Test Waypoint Following">
-</div>
+<img src="imgs/pid_test.png" width="600" alt="PID Test Waypoint Following">
 
 #### Waypoint Follower
 
@@ -70,15 +64,13 @@ The perception subsystem consists of a Traffic Light Detector. Note: The Obstacl
 
 The Traffic Light Detection node (*/tl_detector*) consists of a light detector, and a classifier. The Light Detector (*tl_detector.py*) subscribes to images published by the vehicle’s forward-facing camera, dynamically adjusts the image processing rate, sends images to the classifier for light state detection (RED, YELLOW, GREEN, or UNKNOWN), and publishes the location of the stop line for the detected stop light for the Planning Subsystem to act upon in the event of a RED light.
 
-<div style="text-align:center">
-  <img src="imgs/sim_stop.png" width="600" alt="Simulator stopped at red light">
-</div>
+<img src="imgs/sim_stop.png" width="600" alt="Simulator stopped at red light">
 
 #### Traffic Light Classifier
 
 The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed.
 
-[Inception Model](https://arxiv.org/abs/1512.00567)
+![Inception Model](https://arxiv.org/abs/1512.00567)
 
 < Insert image of classifier architecture here >
 
@@ -86,6 +78,9 @@ Image classification certainty tended to be quite high…
 
 < Insert images of detected traffic lights here >
 
+<img src="imgs/classify_red.jpg" width="600" alt="Classified red light with high certainty">
+
+<img src="imgs/classify_yellow.jpg" width="600" alt="Classified yellow light with high certainty">
 
 ## Results
 
