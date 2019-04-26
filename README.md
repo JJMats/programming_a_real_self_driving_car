@@ -5,7 +5,7 @@
 ![Header Image Carla](imgs/header.jpeg)
 ###### *Udacity. "Carla" Udacity.com*
 
-In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop at red illuminated traffic lights.
+In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop safely at red illuminated traffic lights.
 
 <br />
 
