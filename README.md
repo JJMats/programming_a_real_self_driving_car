@@ -70,13 +70,11 @@ The Traffic Light Detection node (*/tl_detector*) consists of a light detector, 
 
 The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed.
 
-![Inception Model](https://arxiv.org/abs/1512.00567)
+[Inception Model](https://arxiv.org/abs/1512.00567 "Inception Model")
 
 < Insert image of classifier architecture here >
 
 Image classification certainty tended to be quite high… 
-
-< Insert images of detected traffic lights here >
 
 <img src="imgs/classify_red.jpg" width="600" alt="Classified red light with high certainty">
 
@@ -91,6 +89,7 @@ A video of the simulator run can be found below:
 
 ## Known Issues
 
+ - Lag can be induced into the simulator as experienced by the vehicle exhibiting a waypoint trail extending behind it. This is heavily dependent upon machine resources, but can be helped by classifying images at extended intervals or dropping images. In this project, it was decided upon to drop 9 out of every 10 images when the vehicle was not within 100 meters of the traffic light, and then this was reduced to 3 out of every 4 images when it was within this threshold.
 
 # Installation Instructions
 
