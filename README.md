@@ -5,7 +5,7 @@
 ![Header Image Carla](imgs/header.jpeg)
 ###### *Udacity. "Carla" Udacity.com*
 
-In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. 
+In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop at "red" traffic lights.
 
 
 ## Team Members 
@@ -17,34 +17,38 @@ In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked 
 | Emilio Moyers | emoyersb | gmail | com |
 | Yang Sun | jonathan.eric.sun | gmail | com |
 
-
-
+<br />
 
 ## Vehicle Subsystems
 
-Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS). Each subsystem is comprised of multiple components.
+Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS). Each subsystem is comprised of multiple components to fulfill the greater task.
 
 ![ROS Architecture Diagram](imgs/ros_diagram.png)
 ###### *Udacity. "final-project-ros-graph-v2.png" Udacity.com*
 
+<br />
 
 ### Planning
 
 The first subsystem to implement was the Planning subsystem. It consists of the Waypoint Loader and the Waypoint Updater nodes.
 
 #### Waypoint Loader
-The Waypoint Loader node loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
+The Waypoint Loader node (*/waypoint_loader*) loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
 
 <img src="imgs/sim_start.png" width="600" alt="Simulator Start">
 
+<br/>
+
 #### Waypoint Updater
-The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
+The Waypoint Updater node (*/waypoint_updater*) is responsible for adjusting the longitudinal velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
 
 <img src="imgs/sim_run.png" width="600" alt="Simulator Waypoints">
 
+<br />
+
 ### Control
 
-The Control Subsystem was the next to implement. It consists of the Drive-By-Wire (Twist Controller) and Waypoint Follower nodes.
+The Control Subsystem was the next to implement. It consists of the Drive-By-Wire (*/twist_controller*) and Waypoint Follower (*/waypoint_follower*) nodes.
 
 #### DBW Node
 
@@ -56,6 +60,7 @@ The DBW node (*/twist_controller/dbw_node.py*) is responsible for providing new 
 
 The Waypoint Follower node (*/waypoint_follower/waypoint_follower.py*) is Autoware code that is responsible for outputting the control commands to the vehicle that have been provided by the DBW node.
 
+<br />
 
 ### Perception
 
@@ -69,7 +74,7 @@ The Traffic Light Detection node (*/tl_detector*) consists of a light detector, 
 
 #### Traffic Light Classifier
 
-The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed.
+The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed. This model performed very well for our application.
 
 Additional information on the SSD Inception V2 Model can be found at:
 
@@ -77,8 +82,6 @@ Additional information on the SSD Inception V2 Model can be found at:
 
 ![SSD Inception V2 Model Diagram](imgs/ssd_v2.jpeg)
 ###### *Towards Data Science. "SSD Architecture" TowardsDataScience.com*
-
-Image classification certainty tended to be quite high… 
 
 <img src="imgs/classify_red.jpg" width="600" alt="Classified red light with high certainty">
 
@@ -88,12 +91,14 @@ Image classification certainty tended to be quite high…
 
 A video of the simulator run can be found below:
  
- [![Simulator Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)](https://www.youtube.com/watch?v=ilKkEYNfy_U)
+[![Simulator Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)](https://www.youtube.com/watch?v=ilKkEYNfy_U)
 
 
 ## Known Issues
 
  - Lag can be induced into the simulator as experienced by the vehicle exhibiting a waypoint trail extending behind it. This is heavily dependent upon machine resources, but can be helped by classifying images at extended intervals or dropping images. In this project, it was decided upon to drop 9 out of every 10 images when the vehicle was not within 100 waypoints of the traffic light, and then this was reduced to 3 out of every 4 images when it was within this threshold.
+
+<br />
 
 # Installation Instructions
 
