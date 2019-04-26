@@ -77,9 +77,12 @@ Image classification certainty tended to be quite high…
 
 ## Results
 
-<figure class="video_container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ilKkEYNfy_U" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</figure>
+A video of the simulator run can be found below:
+
+ - [Simulator Run](https://www.youtube.com/embed/ilKkEYNfy_U)
+ 
+ [![Simulator Run Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)] (https://youtu.be/ilKkEYNfy_U)
+
 
 ## Known Issues
 
