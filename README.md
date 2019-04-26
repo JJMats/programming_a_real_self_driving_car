@@ -37,7 +37,7 @@ The Waypoint Loader node loads the initial waypoints for the track that the vehi
 #### Waypoint Updater
 The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
 
-![Simulator Waypoint Trail](imgs/sim_waypoints.png)
+<img src="imgs/sim_waypoints.png" width="300">
 
 ### Control
 
