@@ -23,7 +23,7 @@ In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked 
 
 Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS). Each subsystem is comprised of multiple components.
 
-![ROS Architecture Diagram](imgs/ros_diagram.png) "Udacity ROS Diagram"
+![ROS Architecture Diagram](imgs/ros_diagram.png)
 ###### *Udacity. "final-project-ros-graph-v2.png" Udacity.com*
 
 
@@ -38,7 +38,7 @@ The Waypoint Loader node loads the initial waypoints for the track that the vehi
 The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
 
 < Insert image here of vehicle on simulator track with waypoint trail >
-
+![Simulator Waypoint Trail](imgs/sim_waypoints.png =250x)
 
 ### Control
 
@@ -78,8 +78,6 @@ Image classification certainty tended to be quite high…
 ## Results
 
 A video of the simulator run can be found below:
-
- - [Simulator Run](https://www.youtube.com/embed/ilKkEYNfy_U)
  
  [![Simulator Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)](https://www.youtube.com/watch?v=ilKkEYNfy_U)
 
