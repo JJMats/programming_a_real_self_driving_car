@@ -7,6 +7,7 @@
 
 In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. This test will verify the vehicle's ability to follow a path of provided waypoints and stop at "red" traffic lights.
 
+<br />
 
 ## Team Members 
 
@@ -36,8 +37,6 @@ The first subsystem to implement was the Planning subsystem. It consists of the 
 The Waypoint Loader node (*/waypoint_loader*) loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
 
 <img src="imgs/sim_start.png" width="600" alt="Simulator Start">
-
-<br/>
 
 #### Waypoint Updater
 The Waypoint Updater node (*/waypoint_updater*) is responsible for adjusting the longitudinal velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
@@ -83,9 +82,21 @@ Additional information on the SSD Inception V2 Model can be found at:
 ![SSD Inception V2 Model Diagram](imgs/ssd_v2.jpeg)
 ###### *Towards Data Science. "SSD Architecture" TowardsDataScience.com*
 
+##### Classified red stop light (simulator):
+
 <img src="imgs/classify_red.jpg" width="600" alt="Classified red light with high certainty">
 
+##### Classified yellow stop light (simulator):
+
 <img src="imgs/classify_yellow.jpg" width="600" alt="Classified yellow light with high certainty">
+
+##### Classified red stop light (Carla):
+
+<img src="imgs/classify_red_site.jpg" width="600" alt="Classified red light with high certainty">
+
+##### Classified green stop light (Carla):
+
+<img src="imgs/classify_green_site.jpg" width="600" alt="Classified green light with high certainty">
 
 ## Results
 
