@@ -75,6 +75,8 @@ The perception subsystem consists of a Traffic Light Detector. Note: The Obstacl
 
 The Traffic Light Detection node (*/tl_detector*) consists of a light detector, and a classifier. The Light Detector (*tl_detector.py*) subscribes to images published by the vehicle’s forward-facing camera, dynamically adjusts the image processing rate, sends images to the classifier for light state detection (RED, YELLOW, GREEN, or UNKNOWN), and publishes the location of the stop line for the detected stop light for the Planning Subsystem to act upon in the event of a RED light.
 
+It was found that lag can be induced into the simulator as experienced by the vehicle exhibiting a waypoint trail extending behind it while traversing the test track. This is heavily dependent upon machine resources, but can be helped by classifying images at extended intervals or dropping images. In this project, it was decided upon to drop 9 out of every 10 images when the vehicle's position exceeded 100 waypoints of the traffic light stop line, and then this was reduced to 3 out of every 4 images when it was within this threshold.
+
 <img src="imgs/sim_stop.png" width="600" alt="Simulator stopped at red light">
 
 #### Traffic Light Classifier
@@ -109,11 +111,6 @@ Additional information on the SSD Inception V2 Model can be found at:
 A video of the simulator run can be found below:
  
 [![Simulator Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)](https://www.youtube.com/watch?v=ilKkEYNfy_U)
-
-
-## Known Issues
-
- - Lag can be induced into the simulator as experienced by the vehicle exhibiting a waypoint trail extending behind it. This is heavily dependent upon machine resources, but can be helped by classifying images at extended intervals or dropping images. In this project, it was decided upon to drop 9 out of every 10 images when the vehicle was not within 100 waypoints of the traffic light, and then this was reduced to 3 out of every 4 images when it was within this threshold.
 
 <br />
 
