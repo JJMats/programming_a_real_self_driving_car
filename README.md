@@ -16,12 +16,15 @@ In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked 
 | Emilio Moyers | emoyersb | gmail | com |
 | Yang Sun | jonathan.eric.sun | gmail | com |
 
-< Insert architecture image here >
+
 
 
 ## Vehicle Subsystems
 
-Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS).
+Three major subsystems were configured to communicate with each other utilizing the Robot Operating System (ROS). Each subsystem is comprised of multiple components.
+
+![ROS Architecture Diagram](imgs/ros_diagram.png) "Udacity ROS Diagram"
+*Udacity. "final-project-ros-graph-v2.png" Udacity.com*
 
 
 ### Planning
@@ -63,7 +66,7 @@ The Traffic Light Detection node (*/tl_detector*) consists of a light detector, 
 
 The Traffic Light Classifier is a TensorFlow model that is fed the forward-facing camera image from the Traffic Light Detector and returns a state of the traffic light if it is found. The model chosen was the “Single Shot Detection Inception V2” algorithm, which offers better performance than the “Single Shot Detection Mobilenet V1” algorithm, at a slight expense of speed.
 
-[Inception Model]https://arxiv.org/abs/1512.00567
+[Inception Model](https://arxiv.org/abs/1512.00567)
 
 < Insert image of classifier architecture here >
 
