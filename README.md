@@ -81,7 +81,7 @@ A video of the simulator run can be found below:
 
  - [Simulator Run](https://www.youtube.com/embed/ilKkEYNfy_U)
  
- [![Simulator Run Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)] (https://youtu.be/ilKkEYNfy_U)
+ [![Simulator Video](https://img.youtube.com/vi/ilKkEYNfy_U/0.jpg)](https://www.youtube.com/watch?v=ilKkEYNfy_U)
 
 
 ## Known Issues
