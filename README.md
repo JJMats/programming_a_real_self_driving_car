@@ -2,7 +2,8 @@
 
 ## Team RobotCar
 
-< Insert header image here >
+![Header Image Carla](imgs/header.jpeg)
+###### *Udacity. "Carla" Udacity.com*
 
 In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked with implementing core autonomous subsystem functionality to allow Udacity’s Self-Driving Lincoln MKZ to autonomously navigate around a test track. 
 
@@ -74,7 +75,8 @@ Additional information on the SSD Inception V2 Model can be found at:
 
 [Inception Model](https://arxiv.org/abs/1512.00567 "Inception Model")
 
-< Insert image of classifier architecture here >
+![SSD Inception V2 Model Diagram](imgs/ssd_v2.jpeg)
+###### *Towards Data Science. "SSD Architecture" TowardsDataScience.com*
 
 Image classification certainty tended to be quite high… 
 
