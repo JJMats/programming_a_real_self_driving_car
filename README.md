@@ -34,10 +34,16 @@ The first subsystem to implement was the Planning subsystem. It consists of the 
 #### Waypoint Loader
 The Waypoint Loader node loads the initial waypoints for the track that the vehicle will be tested on. These waypoints contain information about the target pose of the vehicle (x, y, and heading) and the target velocity.
 
+<div style="text-align:center">
+  <img src="imgs/sim_start.png" width="600" alt="Simulator Start">
+</div>
+
 #### Waypoint Updater
 The Waypoint Updater node is responsible for adjusting the linear-x velocity component of the waypoints to account for acceleration and deceleration events. These events are determined by the Control and Perception subsystems.
 
-<img src="imgs/sim_waypoints.png" width="300">
+<div style="text-align:center">
+  <img src="imgs/sim_run.png" width="600" alt="Simulator Waypoints">
+</div>
 
 ### Control
 
@@ -46,7 +52,10 @@ The Control Subsystem was the next to implement. It consists of the Drive-By-Wir
 #### DBW Node
 
 The DBW node (*/twist_controller/dbw_node.py*) is responsible for providing new proposed linear and angular velocities to allow the vehicle to maintain the path planned by the Waypoint Updater node. It consists of PID controller functions for throttle control (*twist_controller.py, pid.py*) and a smoothing braking function, a yaw-controller (*yaw_controller.py*) to adjust heading direction, and a low-pass filter to reduce sensor noise (*lowpass.py*).
-<Insert image of car on “test” track following waypoints>
+
+<div style="text-align:center">
+  <img src="imgs/pid_test.png" width="600" alt="PID Test Waypoint Following">
+</div>
 
 #### Waypoint Follower
 
@@ -60,6 +69,10 @@ The perception subsystem consists of a Traffic Light Detector. Note: The Obstacl
 #### Traffic Light Detector
 
 The Traffic Light Detection node (*/tl_detector*) consists of a light detector, and a classifier. The Light Detector (*tl_detector.py*) subscribes to images published by the vehicle’s forward-facing camera, dynamically adjusts the image processing rate, sends images to the classifier for light state detection (RED, YELLOW, GREEN, or UNKNOWN), and publishes the location of the stop line for the detected stop light for the Planning Subsystem to act upon in the event of a RED light.
+
+<div style="text-align:center">
+  <img src="imgs/sim_stop.png" width="600" alt="Simulator stopped at red light">
+</div>
 
 #### Traffic Light Classifier
 
