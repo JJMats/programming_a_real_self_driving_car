@@ -12,6 +12,7 @@ import tf
 import cv2
 import yaml
 
+RED_STATE_COUNT_THRESHOLD = 2
 STATE_COUNT_THRESHOLD = 3
 DIFF_THRESHOLD = 100
 
@@ -108,7 +109,8 @@ class TLDetector(object):
             if self.state != state:
                 self.state_count = 0
                 self.state = state
-            elif self.state_count >= STATE_COUNT_THRESHOLD:
+            elif self.state_count >= STATE_COUNT_THRESHOLD or \
+                 (self.state == 2 and self.state_count >= RED_STATE_COUNT_THRESHOLD):
                 self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
@@ -203,8 +205,12 @@ class TLDetector(object):
             if diff > DIFF_THRESHOLD:
                 self.image_count_thres = 10
             else:
-                self.image_count_thres = 4
-                light_in_range = True                
+                light_in_range = True
+                if diff < 20:
+                    self.image_count_thres = 1
+                else:
+                    self.image_count_thres = 4
+                               
             
             print('closest light:', diff, self.image_count_thres)
         
