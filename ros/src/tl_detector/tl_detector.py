@@ -37,7 +37,7 @@ class TLDetector(object):
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
-        self.last_state = TrafficLight.UNKNOWN
+        #self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
         self.image_count = -1
@@ -110,8 +110,9 @@ class TLDetector(object):
                 self.state_count = 0
                 self.state = state
             elif self.state_count >= STATE_COUNT_THRESHOLD or \
-                 (self.state == 2 and self.state_count >= RED_STATE_COUNT_THRESHOLD):
-                self.last_state = self.state
+                 (self.state == TrafficLight.RED and \
+                  self.state_count >= RED_STATE_COUNT_THRESHOLD):
+                #self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
                 light_wp = light_wp if state == TrafficLight.RED else -1
