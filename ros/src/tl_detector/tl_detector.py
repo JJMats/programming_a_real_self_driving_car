@@ -12,8 +12,7 @@ import tf
 import cv2
 import yaml
 
-RED_STATE_COUNT_THRESHOLD = 2
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 2
 DIFF_THRESHOLD = 100
 
 class TLDetector(object):
@@ -103,19 +102,42 @@ class TLDetector(object):
             '''
             Publish upcoming red lights at camera frequency.
             Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-            of times till we start using it. Otherwise the previous stable state is
+            of times until we start using it. Otherwise the previous stable state is
             used.
             '''
             if self.state != state:
-                self.state_count = 0
-                self.state = state
-            elif self.state_count >= STATE_COUNT_THRESHOLD or \
-                 (self.state == TrafficLight.RED and \
-                  self.state_count >= RED_STATE_COUNT_THRESHOLD):
+                # Check to see if new state is next logical state
+                state_is_logical = False
+                if self.state == TrafficLight.UNKNOWN or state == TrafficLight.UNKNOWN:
+                    # This can possibly be handled differently - Stop the car on 
+                    #  an UNKNOWN state IF it is known that a traffic light is there?
+                    # If the car is within a specified distance (maybe 20 waypoints),
+                    #  consider stopping the car if an Unknown state is detected
+                    #  and possibly clamp this scenario to when a red light is expected?
+                    state_is_logical = True
+                elif self.state == TrafficLight.RED:
+                    if state == TrafficLight.GREEN:
+                        state_is_logical = True
+                elif self.state == TrafficLight.YELLOW:
+                    if state == TrafficLight.RED:
+                        state_is_logical = True
+                elif self.state == TrafficLight.GREEN:
+                    if state == TrafficLight.YELLOW or \
+                        state == TrafficLight.RED:
+                        state_is_logical = True
+                else:
+                    # State is UNKNOWN
+                    # Perform alternative logic here?
+                    state_is_logical = True
+                
+                if state_is_logical:
+                    self.state_count = 0
+                    self.state = state
+            elif self.state_count >= STATE_COUNT_THRESHOLD:
                 #self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
-                light_wp = light_wp if state == TrafficLight.RED else -1
+                light_wp = light_wp if state == TrafficLight.RED or state == TrafficLight.UNKNOWN else -1
                 self.last_wp = light_wp
                 self.upcoming_red_light_pub.publish(Int32(light_wp))
             else:
@@ -197,7 +219,7 @@ class TLDetector(object):
                 temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
                 # Find closest stop line waypoint index
                 d = temp_wp_idx - car_wp_idx
-                if d >= 0 and d < diff:
+                if d >= -10 and d < diff:
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx
@@ -208,7 +230,7 @@ class TLDetector(object):
             else:
                 light_in_range = True
                 if diff < 20:
-                    self.image_count_thres = 1
+                    self.image_count_thres = 4
                 else:
                     self.image_count_thres = 4
                                

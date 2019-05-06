@@ -3,7 +3,7 @@
 import math
 import numpy as np
 import rospy
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from scipy.spatial import KDTree
 from std_msgs.msg import Int32
 from styx_msgs.msg import Lane, Waypoint
@@ -24,7 +24,8 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 2.5 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
+MAX_DECEL = 5.0 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
+TARGET_DECEL_RATE = 2.5 # m/s
 
 class WaypointUpdater(object):
     def __init__(self):        
@@ -36,10 +37,12 @@ class WaypointUpdater(object):
         self.stopline_wp_idx = -1
         self.waypoints_2d = None
         self.waypoint_tree = None
+        self.current_vel = 0.0
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)    
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
         
@@ -125,10 +128,31 @@ class WaypointUpdater(object):
                 
             # Possibly change the following function to smooth the initial deceleration and final deceleration rates
             #rospy.logwarn("Dist: {0}, MAX_DECEL: {1}".format(dist,MAX_DECEL))
-                time_to_complete_stop = math.sqrt(dist * 2.0 / MAX_DECEL)
+
+                # Calculate the time in seconds it takes to stop at the stop line
+                #  at the Target Deceleration Rate
+                
+                #time_to_complete_stop = math.sqrt(dist * 2.0 / TARGET_DECEL_RATE) # Seconds
+                time_to_complete_stop = 0.0
+
+                # Calculate the distance required to stop at the Target Deceleration Rate
+                stopping_dist_at_target_decel = dist / TARGET_DECEL_RATE
+
+                if stopping_dist_at_target_decel > dist:
+                    # Adjust Decel Rate up to Maximum to meet stopping distance
+                    
+                    # Calculate Required Deceleration Rate To Stop at Stop Line
+                    required_decel_rate = self.current_vel / dist
+
+                    # Clamp required decel rate to maximum deceleration rate
+                    required_decel_rate = min(required_decel_rate, MAX_DECEL)
+                    time_to_complete_stop = math.sqrt(dist * 2.0 / required_decel_rate)
+                else:
+                    time_to_complete_stop = math.sqrt(dist * 2.0 / TARGET_DECEL_RATE)
+                
                 braking_vel = 2.0 * dist / time_to_complete_stop
                 
-                if braking_vel < 0.1:
+                if braking_vel < 0.05:
                     braking_vel = 0.0
             
             # Original function
@@ -141,6 +165,7 @@ class WaypointUpdater(object):
             
             # Take minimum velocity of braking_velocity and maximum velocity to prevent
             #   velocity changes over the maximum velocity at large dist values.
+            
             p.twist.twist.linear.x = min(braking_vel, wp.twist.twist.linear.x)
             temp.append(p)
             
@@ -150,6 +175,9 @@ class WaypointUpdater(object):
     def pose_cb(self, msg):
         # TODO: Implement
         self.pose = msg
+
+    def velocity_cb(self, msg):
+        self.current_vel = msg
 
         
     def waypoints_cb(self, waypoints):
