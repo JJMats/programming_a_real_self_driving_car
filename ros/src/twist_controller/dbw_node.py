@@ -111,6 +111,7 @@ class DBWNode(object):
 
             
     def publish(self, throttle, brake, steer):
+        #rospy.logwarn("Throttle: {0}, Brake: {1}, Steer: {2}".format(throttle, brake, steer))
         tcmd = ThrottleCmd()
         tcmd.enable = True
         tcmd.pedal_cmd_type = ThrottleCmd.CMD_PERCENT

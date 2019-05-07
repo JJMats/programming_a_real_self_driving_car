@@ -29,6 +29,7 @@ class TLDetector(object):
         self.config = yaml.load(config_string)
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.upcoming_traffic_light_state_pub = rospy.Publisher('/traffic_light_state', Int32, queue_size=1)
 
         self.bridge = CvBridge()
         self.is_simulation = not self.config["is_site"]
@@ -36,7 +37,7 @@ class TLDetector(object):
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
-        #self.last_state = TrafficLight.UNKNOWN
+        self.working_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
         self.image_count = -1
@@ -137,6 +138,7 @@ class TLDetector(object):
                 #self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
+                self.working_state = self.state
                 light_wp = light_wp if state == TrafficLight.RED or state == TrafficLight.UNKNOWN else -1
                 self.last_wp = light_wp
                 self.upcoming_red_light_pub.publish(Int32(light_wp))
@@ -144,6 +146,7 @@ class TLDetector(object):
                 self.upcoming_red_light_pub.publish(Int32(self.last_wp))
                 
             self.state_count += 1
+            self.upcoming_traffic_light_state_pub.publish(Int32(self.working_state))
         else:
             state = self.state
     

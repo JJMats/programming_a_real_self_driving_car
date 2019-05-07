@@ -21,8 +21,8 @@ class Controller(object):
 
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
         
-        kp = 0.15 #0.3
-        ki = 0.05 #0.1
+        kp = 0.3 #0.3
+        ki = 0.1 #0.1
         kd = 0.0
         mn = 0.0 # Minimum throttle value
 
@@ -102,7 +102,7 @@ class Controller(object):
                 throttle = self.throttle_aim
 
         
-        if linear_vel == 0.0 and current_vel < 0.05:
+        if linear_vel == 0.0 and current_vel < 1.0:
             throttle = 0.0
             self.throttle_aim = 0.0
             # Changed from 400 Nm to 700 Nm per Udacity's specification of how much torque it would take
@@ -118,6 +118,7 @@ class Controller(object):
             throttle = 0.0
             self.throttle_aim = 0.0
             decel = max(vel_error, self.decel_limit)
+            rospy.logwarn("Vel error: {0}, Decel value {1}".format(vel_error, decel))
             brake = abs(decel)*(self.vehicle_mass+self.fuel_capacity*GAS_DENSITY)*self.wheel_radius # Torque N*m
         else:
             # Reset stopping brake value
