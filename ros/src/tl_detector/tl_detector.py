@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import rospy
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
@@ -182,9 +183,10 @@ class TLDetector(object):
             return False
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
+        #cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         #Get classification
-        print('running the Clf')
+        #print('running the Clf')
         return self.light_classifier.get_classification(cv_image)
 
     
@@ -222,7 +224,7 @@ class TLDetector(object):
                 temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
                 # Find closest stop line waypoint index
                 d = temp_wp_idx - car_wp_idx
-                if d >= -10 and d < diff:
+                if d >= -5 and d < diff:
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx

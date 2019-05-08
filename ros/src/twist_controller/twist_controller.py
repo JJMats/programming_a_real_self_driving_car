@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 from lowpass import LowPassFilter
 from pid import PID
@@ -118,7 +120,7 @@ class Controller(object):
             throttle = 0.0
             self.throttle_aim = 0.0
             decel = max(vel_error, self.decel_limit)
-            rospy.logwarn("Vel error: {0}, Decel value {1}".format(vel_error, decel))
+            #rospy.logwarn("Vel error: {0}, Decel value {1}".format(vel_error, decel))
             brake = abs(decel)*(self.vehicle_mass+self.fuel_capacity*GAS_DENSITY)*self.wheel_radius # Torque N*m
         else:
             # Reset stopping brake value
