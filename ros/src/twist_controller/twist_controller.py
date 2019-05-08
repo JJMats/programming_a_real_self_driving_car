@@ -29,7 +29,7 @@ class Controller(object):
         mn = 0.0 # Minimum throttle value
 
         if self.is_simulation:
-            mx = 0.2 # Maximum throttle value, increase this if desired
+            mx = 0.4 # Maximum throttle value, increase this if desired
         else:
             mx = 0.2
 

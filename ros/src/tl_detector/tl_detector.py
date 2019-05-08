@@ -224,7 +224,7 @@ class TLDetector(object):
                 temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
                 # Find closest stop line waypoint index
                 d = temp_wp_idx - car_wp_idx
-                if d >= -5 and d < diff:
+                if d >= -3 and d < diff:
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx
@@ -240,7 +240,7 @@ class TLDetector(object):
                     self.image_count_thres = 4
                                
             
-            print('closest light:', diff, self.image_count_thres)
+            print('closest light:', diff, self.image_count_thres, 'working state:', self.working_state)
         
         if closest_light and light_in_range:
             state = self.get_light_state(closest_light)

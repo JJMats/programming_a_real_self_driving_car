@@ -166,7 +166,7 @@ class WaypointUpdater(object):
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0) # Four waypoints back from stop line so front of car stops before stop line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from stop line so front of car stops before stop line
         last_braking_velocity = self.current_vel
         new_dec_rate = TARGET_DECEL_RATE
 
