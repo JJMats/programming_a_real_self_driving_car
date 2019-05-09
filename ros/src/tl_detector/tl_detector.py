@@ -99,7 +99,7 @@ class TLDetector(object):
         if self.image_count % self.image_count_thres == 0:
             self.has_image = True        
             self.camera_image = msg
-            light_wp, state = self.process_traffic_lights()       
+            light_wp, state, distance = self.process_traffic_lights()       
             
             '''
             Publish upcoming red lights at camera frequency.
@@ -140,7 +140,11 @@ class TLDetector(object):
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
                 self.working_state = self.state
-                light_wp = light_wp if state == TrafficLight.RED or state == TrafficLight.UNKNOWN else -1
+                light_wp = light_wp if state == TrafficLight.RED \
+                    or state == TrafficLight.UNKNOWN \
+                        or (state == TrafficLight.YELLOW and distance > 15.0) \
+                        else -1
+                
                 self.last_wp = light_wp
                 self.upcoming_red_light_pub.publish(Int32(light_wp))
             else:
@@ -244,9 +248,9 @@ class TLDetector(object):
         
         if closest_light and light_in_range:
             state = self.get_light_state(closest_light)
-            return line_wp_idx, state
+            return line_wp_idx, state, diff
         
-        return -1, TrafficLight.UNKNOWN
+        return -1, TrafficLight.UNKNOWN, 1000
 
 
 if __name__ == '__main__':
