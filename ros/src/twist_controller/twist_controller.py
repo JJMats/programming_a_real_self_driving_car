@@ -78,30 +78,30 @@ class Controller(object):
         brake = 0.0
         throttle = 0.0
 
-        if self.is_simulation:
+        #if self.is_simulation:
         # Original PID Control Function - Run this for simulator
-            current_time = rospy.get_time()
-            sample_time = current_time - self.last_time
-            self.last_time = current_time        
-            throttle = self.throttle_controller.step(vel_error, sample_time)
+        current_time = rospy.get_time()
+        sample_time = current_time - self.last_time
+        self.last_time = current_time        
+        throttle = self.throttle_controller.step(vel_error, sample_time)
 
-        else:
-            # New PID control function - Run this on Carla?
-            if self.last_throttle_value >= self.throttle_aim:
-                current_time = rospy.get_time()
-                sample_time = current_time - self.last_time
-                self.last_time = current_time
-                # Run PID Controller
-                self.throttle_aim = self.throttle_controller.step(vel_error, sample_time)
+        # else:
+        #     # New PID control function - Run this on Carla?
+        #     if self.last_throttle_value >= self.throttle_aim:
+        #         current_time = rospy.get_time()
+        #         sample_time = current_time - self.last_time
+        #         self.last_time = current_time
+        #         # Run PID Controller
+        #         self.throttle_aim = self.throttle_controller.step(vel_error, sample_time)
             
-            if self.last_throttle_value < self.throttle_aim:
-                # Proportionally increase throttle to meet aim
-                throttle += self.last_throttle_value + (self.throttle_aim * 0.01) # Increases throttle at 1% per update
+        #     if self.last_throttle_value < self.throttle_aim:
+        #         # Proportionally increase throttle to meet aim
+        #         throttle += self.last_throttle_value + (self.throttle_aim * 0.01) # Increases throttle at 1% per update
 
-                # Clamp throttle to aim value
-                throttle = min(throttle, self.throttle_aim)
-            else:
-                throttle = self.throttle_aim
+        #         # Clamp throttle to aim value
+        #         throttle = min(throttle, self.throttle_aim)
+        #     else:
+        #         throttle = self.throttle_aim
 
         
         if linear_vel == 0.0 and current_vel < 1.0:
