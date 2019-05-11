@@ -112,7 +112,8 @@ class WaypointUpdater(object):
         base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
         
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx > farthest_idx) or \
-            (self.light_state > 0 and self.light_state < 4):
+            (self.light_state == 1 and self.stopline_wp_idx == -1) or \
+                (self.light_state == 2):
             # If current velocity < waypoint velocity - threshold (maybe 80%?), accelerate to it
             #rospy.logwarn("Current velocity: {0}, target velocity: {1}, Light State: {2}".format(self.current_vel, base_waypoints[0].twist.twist.linear.x, self.light_state))
             if not self.is_simulation and self.current_vel < base_waypoints[0].twist.twist.linear.x * 0.8:

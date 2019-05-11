@@ -44,6 +44,7 @@ class TLDetector(object):
         self.image_count = -1
         self.has_image = False
         self.image_count_thres = 4
+        self.stop_for_yellow = False
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -135,15 +136,21 @@ class TLDetector(object):
                 if state_is_logical:
                     self.state_count = 0
                     self.state = state
+                    self.stop_for_yellow = False
             elif self.state_count >= STATE_COUNT_THRESHOLD:
                 #self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
+                if state == TrafficLight.YELLOW and distance > 20.0:
+                    self.stop_for_yellow = True
+                
                 self.working_state = self.state
                 light_wp = light_wp if state == TrafficLight.RED \
                     or state == TrafficLight.UNKNOWN \
-                        or (state == TrafficLight.YELLOW and distance > 15.0) \
-                        else -1
+                        or self.stop_for_yellow else -1
+
+                if self.stop_for_yellow:
+                    rospy.logwarn("Stopping for yellow! Light Waypoint: {0}".format(light_wp))
                 
                 self.last_wp = light_wp
                 self.upcoming_red_light_pub.publish(Int32(light_wp))
