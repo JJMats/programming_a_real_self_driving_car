@@ -45,6 +45,7 @@ class TLDetector(object):
         self.has_image = False
         self.image_count_thres = 4
         self.stop_for_yellow = False
+        self.target_velocity = 0.0
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -75,6 +76,7 @@ class TLDetector(object):
         
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
+        self.target_velocity = waypoints.waypoints[100].twist.twist.linear.x
 
         waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
         self.waypoint_tree = KDTree(waypoints_2d)
@@ -141,7 +143,10 @@ class TLDetector(object):
                 #self.last_state = self.state
                 # Only store traffic light waypoints if the light is red (otherwise, drive through)
                 # Possibly update this code to account for yellow or stale green lights
-                if state == TrafficLight.YELLOW and distance > 20.0:
+                #if state == TrafficLight.YELLOW and distance > 20.0:                
+                target_yl_stop_distance = self.target_velocity * 1.8
+                if state == TrafficLight.YELLOW \
+                    and distance >= target_yl_stop_distance:
                     self.stop_for_yellow = True
                 
                 self.working_state = self.state
@@ -150,7 +155,7 @@ class TLDetector(object):
                         or self.stop_for_yellow else -1
 
                 if self.stop_for_yellow:
-                    rospy.logwarn("Stopping for yellow! Light Waypoint: {0}".format(light_wp))
+                    rospy.logwarn("Stopping for yellow! Light Waypoint: {0}, Target Velocity: {1}, Target Stop Dist: {2}".format(light_wp, self.target_velocity, target_yl_stop_distance))
                 
                 self.last_wp = light_wp
                 self.upcoming_red_light_pub.publish(Int32(light_wp))
