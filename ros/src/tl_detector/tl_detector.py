@@ -4,7 +4,7 @@ import rospy
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
 from styx_msgs.msg import TrafficLightArray, TrafficLight
-from styx_msgs.msg import Lane
+from styx_msgs.msg import Lane, MaximumVelocity
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
@@ -58,6 +58,7 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+        sub4 = rospy.Subscriber('/maximum_velocity', MaximumVelocity, self.max_vel_cb)
         sub6 = None
 
         # We may want to use image_raw here to prevent loss of data when changing color schemes
@@ -76,10 +77,12 @@ class TLDetector(object):
         
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-        self.target_velocity = waypoints.waypoints[100].twist.twist.linear.x
-
         waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
         self.waypoint_tree = KDTree(waypoints_2d)
+
+    def max_vel_cb(self, msg):
+        self.target_velocity = msg.velocity
+        rospy.logwarn("Target Velocity (m/s): {0}".format(self.target_velocity))
 
         
     def traffic_cb(self, msg):
@@ -118,7 +121,7 @@ class TLDetector(object):
                     #  an UNKNOWN state IF it is known that a traffic light is there?
                     # If the car is within a specified distance (maybe 20 waypoints),
                     #  consider stopping the car if an Unknown state is detected
-                    #  and possibly clamp this scenario to when a red light is expected?
+                    #  and possibly clamp this scenario to when a red light is expected
                     state_is_logical = True
                 elif self.state == TrafficLight.RED:
                     if state == TrafficLight.GREEN:
@@ -140,10 +143,7 @@ class TLDetector(object):
                     self.state = state
                     self.stop_for_yellow = False
             elif self.state_count >= STATE_COUNT_THRESHOLD:
-                #self.last_state = self.state
-                # Only store traffic light waypoints if the light is red (otherwise, drive through)
-                # Possibly update this code to account for yellow or stale green lights
-                #if state == TrafficLight.YELLOW and distance > 20.0:                
+                # Only store traffic light waypoints if the light is red or stale yellow (otherwise, drive through)             
                 target_yl_stop_distance = self.target_velocity * 1.8
                 if state == TrafficLight.YELLOW \
                     and distance >= target_yl_stop_distance:
@@ -240,17 +240,23 @@ class TLDetector(object):
                 temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
                 # Find closest stop line waypoint index
                 d = temp_wp_idx - car_wp_idx
+                # Allow a stop up to a short distance into the intersection (3 waypoints) to accommodate
+                #  late light state classifications or stale yellow to red light changes.
                 if d >= -3 and d < diff:
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx
         
-
+            # Classify once every 10 images when far away from a traffic light, and increase this rate
+            #  when near.
             if diff > DIFF_THRESHOLD:
                 self.image_count_thres = 10
             else:
                 light_in_range = True
                 if diff < 20:
+                    # Option to increase image classification frequency when the vehicle is close to the
+                    #  traffic light. This parameter may be best utilized on accurate, fast classifiers,
+                    #  if the system can handle the extra compute overhead.
                     self.image_count_thres = 4
                 else:
                     self.image_count_thres = 4
