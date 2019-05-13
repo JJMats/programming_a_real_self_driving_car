@@ -6,7 +6,7 @@ import math
 
 from geometry_msgs.msg import Quaternion
 
-from styx_msgs.msg import Lane, Waypoint
+from styx_msgs.msg import Lane, Waypoint, MaximumVelocity
 
 import tf
 import rospy
@@ -19,18 +19,19 @@ class WaypointLoader(object):
 
     def __init__(self):
         rospy.init_node('waypoint_loader', log_level=rospy.DEBUG)        
+        self.velocity = self.kmph2mps(rospy.get_param('~velocity'))        
 
         self.pub = rospy.Publisher('/base_waypoints', Lane, queue_size=1, latch=True)
+        self.vel_pub = rospy.Publisher('/maximum_velocity', MaximumVelocity, queue_size=1, latch=True)
 
-        self.velocity = self.kmph2mps(rospy.get_param('~velocity'))
         self.new_waypoint_loader(rospy.get_param('~path'))
-
+        
         rospy.spin()
 
     def new_waypoint_loader(self, path):
         if os.path.isfile(path):
             waypoints = self.load_waypoints(path)
-            self.publish(waypoints)
+            self.publish(waypoints)            
             rospy.loginfo('Waypoint Loded')
         else:
             rospy.logerr('%s is not a file', path)
@@ -78,6 +79,12 @@ class WaypointLoader(object):
         lane.header.stamp = rospy.Time(0)
         lane.waypoints = waypoints
         self.pub.publish(lane)
+        
+        vel = MaximumVelocity()
+        vel.header.frame_id = '/world'
+        vel.header.stamp = rospy.Time(0)
+        vel.velocity = self.velocity
+        self.vel_pub.publish(vel)
 
 
 if __name__ == '__main__':

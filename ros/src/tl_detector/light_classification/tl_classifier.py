@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from styx_msgs.msg import TrafficLight
 
 import cv2
@@ -92,14 +94,14 @@ class TLClassifier(object):
             end_classification_t = datetime.datetime.now()
             elapsed_time = end_classification_t - start_classification_t
 
-            #print("Classification took:", elapsed_time.total_seconds())
+            print("Classification took:", elapsed_time.total_seconds())
 
         boxes = np.squeeze(boxes)
         scores = np.squeeze(scores)
         classes = np.squeeze(classes).astype(np.int32)
 
         #print('Best class: ', classes[0])
-        #print('Best score: ', scores[0])
+        print('Best score: ', scores[0])
 
         if scores[0] > self.threshold:
             if classes[0] == 1:

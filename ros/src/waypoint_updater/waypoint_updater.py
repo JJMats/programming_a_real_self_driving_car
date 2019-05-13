@@ -3,7 +3,8 @@
 import math
 import numpy as np
 import rospy
-from geometry_msgs.msg import PoseStamped
+import yaml
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from scipy.spatial import KDTree
 from std_msgs.msg import Int32
 from styx_msgs.msg import Lane, Waypoint
@@ -24,11 +25,16 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 2.5 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
+MAX_ACCEL = 1.0 #l m/s - Maximum acceleration rate to keep jerk below 10m/s^3
+MAX_DECEL = 4.0 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
+TARGET_DECEL_RATE = 1.0 # m/s
 
 class WaypointUpdater(object):
     def __init__(self):        
-        rospy.init_node('waypoint_updater')        
+        rospy.init_node('waypoint_updater')  
+
+        config_string = rospy.get_param("/traffic_light_config")
+        self.config = yaml.load(config_string)
 
         # TODO: Add other member variables you need below
         self.base_lane = None
@@ -36,13 +42,17 @@ class WaypointUpdater(object):
         self.stopline_wp_idx = -1
         self.waypoints_2d = None
         self.waypoint_tree = None
+        self.current_vel = 0.0
+        self.light_state = -1
+        self.is_simulation = not self.config["is_site"]
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)    
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
+        rospy.Subscriber('/traffic_light_state', Int32, self.traffic_light_state_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
-        
         # **** Figure out what this datatype is. Do we need to create this message? ****
         #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb)          
         
@@ -101,18 +111,66 @@ class WaypointUpdater(object):
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
         
-        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx > farthest_idx):
-            lane.waypoints = base_waypoints
+        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx > farthest_idx) or \
+            (self.light_state == 1 and self.stopline_wp_idx == -1) or \
+                (self.light_state == 2):
+            # If current velocity < waypoint velocity - threshold (maybe 80%?), accelerate to it
+            #rospy.logwarn("Current velocity: {0}, target velocity: {1}, Light State: {2}".format(self.current_vel, base_waypoints[0].twist.twist.linear.x, self.light_state))
+            if not self.is_simulation and self.current_vel < base_waypoints[0].twist.twist.linear.x * 0.8:
+                #rospy.logwarn("Go to accelerate_waypoints")
+                lane.waypoints = self.accelerate_waypoints(base_waypoints)
+            else:
+                lane.waypoints = base_waypoints
         else:
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
             
         return lane
     
+    def accelerate_waypoints(self, waypoints):
+        temp = []
+        last_vel = self.current_vel
+        last_time_to_next_wp = 0.0
+
+        #rospy.logwarn("Waypoint length: {0}".format(len(waypoints)))  
+
+        for i, wp in enumerate(waypoints):
+            p = Waypoint()
+            p.pose = wp.pose
+            time_to_next_wp = 0.0
+            dist = 0.0
+            
+            # To calculate accel to be added, it is necessary to determine the time it will
+            #  take at the current velocity to reach the next waypoint
+            
+            if i == len(waypoints) - 1:
+                new_vel = last_vel + last_time_to_next_wp * MAX_ACCEL
+            else:
+                dist = self.distance(waypoints, i, i+1)
+            
+                if last_vel < 1.0:
+                    new_vel = 1.0
+                else:
+                    time_to_next_wp = dist / last_vel
+                    new_vel = last_vel + (MAX_ACCEL * time_to_next_wp)
+            
+            #rospy.logwarn("Last velocity: {0}, New velocity: {1}, TTNWP: {2}, Dist: {3}".format(last_vel, new_vel, time_to_next_wp, dist))
+            new_vel = min(new_vel, wp.twist.twist.linear.x)
+            last_vel = new_vel
+            last_time_to_next_wp = time_to_next_wp
+
+            p.twist.twist.linear.x = new_vel
+            temp.append(p)
+
+        return temp
+
+
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0) # Four waypoints back from stop line so front of car stops before stop line
-        
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from stop line so front of car stops before stop line
+        last_braking_velocity = self.current_vel
+        new_dec_rate = TARGET_DECEL_RATE
+
         #rospy.logwarn("")
         #rospy.logwarn("*** Calculating decel waypoints: Stopline idx: {0}, Closest idx:{1}, Stop idx: {2}".format(self.stopline_wp_idx, closest_idx, stop_idx))
         for i, wp in enumerate(waypoints):            
@@ -120,36 +178,87 @@ class WaypointUpdater(object):
             p.pose = wp.pose
             braking_vel = 0.0         
             dist = self.distance(waypoints, i, stop_idx)
-            
-            if dist > 0.0:
-                
-            # Possibly change the following function to smooth the initial deceleration and final deceleration rates
-            #rospy.logwarn("Dist: {0}, MAX_DECEL: {1}".format(dist,MAX_DECEL))
-                time_to_complete_stop = math.sqrt(dist * 2.0 / MAX_DECEL)
-                braking_vel = 2.0 * dist / time_to_complete_stop
-                
-                if braking_vel < 0.1:
+
+            # ** Maybe change this dist value to dist > 1.0 to prevent rolling forward?
+            if dist > 3.0 and last_braking_velocity < 1.0:
+                # Allow vehicle to accelerate from a dead stop if it is away from the stop line
+                # This is needed to get the car to start moving if the traffic light is red
+
+                # Calculate time to decelerate for the current distance at the deceleration rate
+                tts = math.sqrt(dist * 2.0 / new_dec_rate)
+
+                # Calculate braking velocity (a* t)
+                braking_vel = new_dec_rate * tts
+
+                # Clamp to maximum velocity parameter
+                braking_vel = min(braking_vel, wp.twist.twist.linear.x)
+
+            elif dist > 0.0 and not last_braking_velocity == 0.0:
+                tts = 0.0
+
+                if i == 0:
+                    # Determine if the vehicle needs to decelerate at a rate faster than
+                    #  the TARGET_DECEL_RATE, which is typically caused by:
+                    #  - Missed classifications that cause a light state change
+                    #  - Late detection of a stop light
+                    #  - YELLOW to RED light transitions
+
+                    # Calculate time to decelerate at the last known velocity
+                    tts = dist * 2.0 / last_braking_velocity
+
+                    # Calculate the deceleration rate needed to stop the vehicle from the
+                    #  last known velocity and time to stop
+                    req_dec_rate = last_braking_velocity / tts
+
+                    # Grab the higher decel rate - This will prevent pre-mature deceleration
+                    req_dec_rate = max(req_dec_rate, TARGET_DECEL_RATE)
+
+                    # Clamp the decel rate to the MAX_ACCEL parameter
+                    new_dec_rate = min(req_dec_rate, MAX_DECEL)
+
+                else:
+                    # Continue to decelerate at the last calculated decel rate
+
+                    # Calculate time to decelerate for the current distance at the
+                    #  deceleration rate
+                    tts = math.sqrt(dist * 2.0 / new_dec_rate)
+
+                # Calculate braking velocity (a * t)
+                braking_vel = new_dec_rate * tts
+
+                # Clamp to maximum velocity parameter
+                braking_vel = min(braking_vel, wp.twist.twist.linear.x)
+
+                # Hold car at a stop if the velocity is below 1.0 m/s
+                if braking_vel < 0.5:
                     braking_vel = 0.0
+
+                # Set last braking velocity to the new velocity so that this IF block can
+                #  be bypassed on the rest of the waypoints
+                last_braking_velocity = braking_vel
+
+                # rospy.logwarn("Curr Vel: {0}, Braking Vel: {1}, Dist: {2}, New Decel Rate: {3}, \
+                #                 TTS: {4}" \
+                #     .format(last_braking_velocity, braking_vel, dist, new_dec_rate, \
+                #         tts))
             
             # Original function
             #vel = math.sqrt(2 * MAX_DECEL * dist)
             #if vel < 0.5:
             #    vel = 0.0
 
-            #if braking_vel > 0.0:
-            #    rospy.logwarn("WP idx: {0}, Time to stop: {1}, dist: {2}, braking_vel: {3}, linear_x: {4}".format(i,time_to_complete_stop,dist,braking_vel,wp.twist.twist.linear.x))
-            
-            # Take minimum velocity of braking_velocity and maximum velocity to prevent
-            #   velocity changes over the maximum velocity at large dist values.
-            p.twist.twist.linear.x = min(braking_vel, wp.twist.twist.linear.x)
+            p.twist.twist.linear.x = braking_vel
             temp.append(p)
-            
+
         return temp
             
         
     def pose_cb(self, msg):
         # TODO: Implement
         self.pose = msg
+
+    def velocity_cb(self, msg):
+        self.current_vel = msg.twist.linear.x
 
         
     def waypoints_cb(self, waypoints):
@@ -163,6 +272,9 @@ class WaypointUpdater(object):
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         self.stopline_wp_idx = msg.data
+
+    def traffic_light_state_cb(self, msg):
+        self.light_state = msg.data
 
         
     def obstacle_cb(self, msg):
