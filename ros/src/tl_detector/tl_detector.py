@@ -9,6 +9,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
 from scipy.spatial import KDTree
+from std_msgs.msg import Bool, Float64
 import tf
 import cv2
 import yaml
@@ -24,16 +25,17 @@ class TLDetector(object):
         self.waypoints = None
         self.waypoint_tree = None
         self.camera_image = None
-        self.lights = []
+        self.lights = []        
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
+        self.is_simulation = not self.config["is_site"]
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
         self.upcoming_traffic_light_state_pub = rospy.Publisher('/traffic_light_state', Int32, queue_size=1)
+        self.is_sim_pub = rospy.Publisher('/simulation_status', Bool, queue_size=1, latch=True)
 
         self.bridge = CvBridge()
-        self.is_simulation = not self.config["is_site"]
         self.light_classifier = TLClassifier(self.is_simulation)
         self.listener = tf.TransformListener()
 
@@ -59,6 +61,7 @@ class TLDetector(object):
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub4 = rospy.Subscriber('/maximum_velocity', MaximumVelocity, self.max_vel_cb)
+        #sub5 = rospy.Subscriber('/displacement_threshold', Float64, self.disp_thresh_cb)
         sub6 = None
 
         # We may want to use image_raw here to prevent loss of data when changing color schemes
@@ -80,9 +83,19 @@ class TLDetector(object):
         waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
         self.waypoint_tree = KDTree(waypoints_2d)
 
+        sim_val = True
+        if not self.is_simulation:
+            sim_val = False
+
+        self.is_sim_pub.publish(sim_val)
+
     def max_vel_cb(self, msg):
         self.target_velocity = msg.velocity
         rospy.logwarn("Target Velocity (m/s): {0}".format(self.target_velocity))
+
+
+    #def disp_thresh_cb(self, msg):
+    #    rospy.logwarn("Displacement Threshold (m): {0}".format(msg.data))
 
         
     def traffic_cb(self, msg):

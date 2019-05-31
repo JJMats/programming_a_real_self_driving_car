@@ -38,6 +38,7 @@
 // C++ includes
 #include <memory>
 #include "libwaypoint_follower.h"
+#include "std_msgs/Bool.h"
 
 enum class Mode
 {
@@ -87,6 +88,8 @@ private:
   void getNextWaypoint();
   geometry_msgs::TwistStamped outputZero() const;
   geometry_msgs::TwistStamped outputTwist(geometry_msgs::Twist t) const;
+  
+  //styx_msgs::DisplacementThreshold PurePursuit::outputDisplacementThreshold() const;
 
 public:
   PurePursuit(bool linear_interpolate_mode)
@@ -98,7 +101,7 @@ public:
     , initial_velocity_(5.0)
     , lookahead_distance_calc_ratio_(2.0)
     , minimum_lookahead_distance_(6.0)
-    , displacement_threshold_(0.05)
+    , displacement_threshold_(0.2)
     , relative_angle_threshold_(5.)
     , waypoint_set_(false)
     , pose_set_(false)
@@ -115,6 +118,7 @@ public:
   void callbackFromCurrentPose(const geometry_msgs::PoseStampedConstPtr &msg);
   void callbackFromCurrentVelocity(const geometry_msgs::TwistStampedConstPtr &msg);
   void callbackFromWayPoints(const styx_msgs::LaneConstPtr &msg);
+  void callbackFromSimulationStatus(const std_msgs::Bool::ConstPtr &msg);
 
   // for debug
   geometry_msgs::Point getPoseOfNextWaypoint() const
@@ -136,6 +140,7 @@ public:
   }
   // processing for ROS
   geometry_msgs::TwistStamped go();
+  double getDisplacementThreshold();
 };
 }
 

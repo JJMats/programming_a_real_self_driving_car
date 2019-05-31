@@ -54,6 +54,19 @@ void PurePursuit::callbackFromWayPoints(const styx_msgs::LaneConstPtr &msg)
   // ROS_INFO_STREAM("waypoint subscribed");
 }
 
+void PurePursuit::callbackFromSimulationStatus(const std_msgs::Bool::ConstPtr &msg)
+{
+  // Set the displacement threshold here for the simulator (which needs to be much tighter)
+  //   than the displacement threshold for the site at low speed testing.
+  if (msg->data){
+    displacement_threshold_ = 0.05;
+  }
+}
+
+double PurePursuit::getDisplacementThreshold() {
+  return displacement_threshold_;
+}
+
 double PurePursuit::getCmdVelocity(int waypoint) const
 {
   if (current_waypoints_.isEmpty())
@@ -306,6 +319,14 @@ void PurePursuit::getNextWaypoint()
   num_of_next_waypoint_ = -1;
   return;
 }
+
+/*
+styx_msgs::DisplacementThreshold PurePursuit::outputDisplacementThreshold() const {
+  styx_msgs::DisplacementThreshold disp;
+  disp.header.stamp = ros::Time::now();
+  twist.displacement = displacement_threshold_;
+}
+*/
 
 geometry_msgs::TwistStamped PurePursuit::outputZero() const
 {
