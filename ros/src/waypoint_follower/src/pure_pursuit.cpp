@@ -29,6 +29,9 @@
 */
 
 #include "pure_pursuit_core.h"
+#include <iostream>
+#include "std_msgs/String.h"
+#include "std_msgs/Float64.h"
 
 constexpr int LOOP_RATE = 30; //processing frequency
 
@@ -52,6 +55,7 @@ int main(int argc, char **argv)
   ROS_INFO("set publisher...");
   // publish topic
   ros::Publisher cmd_velocity_publisher = nh.advertise<geometry_msgs::TwistStamped>("twist_cmd", 10);
+  ros::Publisher displacement_thresh_pub = nh.advertise<std_msgs::Float64>("displacement_threshold", 1);
 
   ROS_INFO("set subscriber...");
   // subscribe topic
@@ -61,6 +65,8 @@ int main(int argc, char **argv)
       nh.subscribe("current_pose", 10, &waypoint_follower::PurePursuit::callbackFromCurrentPose, &pp);
   ros::Subscriber est_twist_subscriber =
       nh.subscribe("current_velocity", 10, &waypoint_follower::PurePursuit::callbackFromCurrentVelocity, &pp);
+  ros::Subscriber sim_status_subscriber = 
+      nh.subscribe("simulation_status", 10, &waypoint_follower::PurePursuit::callbackFromSimulationStatus, &pp);
 
   ROS_INFO("pure pursuit start");
   ros::Rate loop_rate(LOOP_RATE);
@@ -68,6 +74,16 @@ int main(int argc, char **argv)
   {
     ros::spinOnce();
     cmd_velocity_publisher.publish(pp.go());
+
+    // Publish Displacement Threshold
+    std_msgs::Float64 msg;
+    //std::stringstream ss;
+    //ss << pp.getDisplacementThreshold();
+    //msg.data = ss.str();
+    msg.data = pp.getDisplacementThreshold();
+
+    displacement_thresh_pub.publish(msg);
+
     loop_rate.sleep();
   }
 
