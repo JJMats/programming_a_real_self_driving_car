@@ -6,7 +6,7 @@ import rospy
 import yaml
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from scipy.spatial import KDTree
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Bool
 from styx_msgs.msg import Lane, Waypoint
 
 '''
@@ -24,8 +24,6 @@ as well as to verify your TL classifier.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
-MAX_ACCEL = 1.0 #l m/s - Maximum acceleration rate to keep jerk below 10m/s^3
-MAX_DECEL = 4.0 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
 TARGET_DECEL_RATE = 1.0 # m/s
 
 class WaypointUpdater(object):
@@ -44,6 +42,10 @@ class WaypointUpdater(object):
         self.current_vel = 0.0
         self.light_state = -1
         self.is_simulation = not self.config["is_site"]
+        self.max_accel = 1.0 # m/s - Maximum acceleration rate to keep jerk below 10m/s^3
+        self.max_decel = 4.0 # m/s - Maximum deceleration rate to keep jerk below 10m/s^3
+        self.simulation_status = True
+        self.stop_waypoint_margin = 2
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)    
 
@@ -52,6 +54,7 @@ class WaypointUpdater(object):
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)     
         rospy.Subscriber('/traffic_light_state', Int32, self.traffic_light_state_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        rospy.Subscriber('/simulation_status', Bool, self.sim_status_cb)
         # **** Figure out what this datatype is. Do we need to create this message? ****
         #rospy.Subscriber('/obstacle_waypoint', ?, self.obstacle_cb)          
         
@@ -142,7 +145,7 @@ class WaypointUpdater(object):
             #  take at the current velocity to reach the next waypoint
             
             if i == len(waypoints) - 1:
-                new_vel = last_vel + last_time_to_next_wp * MAX_ACCEL
+                new_vel = last_vel + last_time_to_next_wp * self.max_accel
             else:
                 dist = self.distance(waypoints, i, i+1)
             
@@ -150,7 +153,7 @@ class WaypointUpdater(object):
                     new_vel = 1.0
                 else:
                     time_to_next_wp = dist / last_vel
-                    new_vel = last_vel + (MAX_ACCEL * time_to_next_wp)
+                    new_vel = last_vel + (self.max_accel * time_to_next_wp)
             
             #rospy.logwarn("Last velocity: {0}, New velocity: {1}, TTNWP: {2}, Dist: {3}".format(last_vel, new_vel, time_to_next_wp, dist))
             new_vel = min(new_vel, wp.twist.twist.linear.x)
@@ -166,7 +169,7 @@ class WaypointUpdater(object):
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from stop line so front of car stops before stop line
+        stop_idx = max(self.stopline_wp_idx - closest_idx - self.stop_waypoint_margin, 0) # Two waypoints back from stop line so front of car stops before stop line
         last_braking_velocity = self.current_vel
         new_dec_rate = TARGET_DECEL_RATE
 
@@ -213,7 +216,7 @@ class WaypointUpdater(object):
                     req_dec_rate = max(req_dec_rate, TARGET_DECEL_RATE)
 
                     # Clamp the decel rate to the MAX_ACCEL parameter
-                    new_dec_rate = min(req_dec_rate, MAX_DECEL)
+                    new_dec_rate = min(req_dec_rate, self.max_decel)
 
                 else:
                     # Continue to decelerate at the last calculated decel rate
@@ -275,6 +278,18 @@ class WaypointUpdater(object):
     def traffic_light_state_cb(self, msg):
         self.light_state = msg.data
 
+    def sim_status_cb(self, msg):
+        self.simulation_status = msg.data    
+        if(self.simulation_status):
+            self.max_accel = 1.0
+            self.max_decel = 4.0
+            self.stop_waypoint_margin = 2
+        else:
+            self.max_accel = 0.5
+            self.max_decel = 4.0
+            self.stop_waypoint_margin = 4
+        
+        rospy.logwarn("Max Accel: {0}, Max Decel: {1}, Stop Waypoint Margin: {2}".format(self.max_accel, self.max_decel, self.stop_waypoint_margin))
         
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later

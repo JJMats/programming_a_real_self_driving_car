@@ -22,16 +22,19 @@ class Controller(object):
         self.is_simulation = not self.config["is_site"]
 
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
-        
-        kp = 0.3 #0.3
-        ki = 0.1 #0.1
-        kd = 0.0
-        mn = 0.0 # Minimum throttle value
 
         if self.is_simulation:
+            kp = 0.3 #0.3
+            ki = 0.1 #0.1
+            kd = 0.0
+            mn = 0.0 # Minimum throttle value
             mx = 0.4 # Maximum throttle value, increase this if desired
         else:
-            mx = 0.2
+            kp = 0.15
+            ki = 0.1
+            kd = 0.0
+            mn = 0.0 # Minimum throttle value
+            mx = 0.15
 
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
         

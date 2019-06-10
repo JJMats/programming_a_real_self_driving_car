@@ -21,7 +21,7 @@ class YawController(object):
         angular_velocity = current_velocity * angular_velocity / linear_velocity if abs(linear_velocity) > 0. else 0.
 
         if abs(current_velocity) > 0.1:
-            max_yaw_rate = abs(self.max_lat_accel / current_velocity);
+            max_yaw_rate = abs(self.max_lat_accel / current_velocity)
             angular_velocity = max(-max_yaw_rate, min(max_yaw_rate, angular_velocity))
         
         #rospy.logwarn("Angular_vel: {0}, Ang Vel 2: {1}, Max Yaw Rate: {2}, Current_vel: {3}, Linear_vel {4}, Min Speed: {5}".format(angular_velocity, ang_vel_orig, max_yaw_rate, current_velocity, linear_velocity, self.min_speed))
