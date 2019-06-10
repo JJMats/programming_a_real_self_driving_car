@@ -66,6 +66,7 @@ private:
   double minimum_lookahead_distance_;  // the next waypoint must be outside of this threshold.
   double displacement_threshold_;
   double relative_angle_threshold_;
+  bool   simulation_status_;
 
   bool waypoint_set_;
   bool pose_set_;
@@ -101,7 +102,7 @@ public:
     , initial_velocity_(5.0)
     , lookahead_distance_calc_ratio_(2.0)
     , minimum_lookahead_distance_(6.0)
-    , displacement_threshold_(0.2)
+    , displacement_threshold_(0.4)
     , relative_angle_threshold_(5.)
     , waypoint_set_(false)
     , pose_set_(false)

@@ -59,7 +59,10 @@ void PurePursuit::callbackFromSimulationStatus(const std_msgs::Bool::ConstPtr &m
   // Set the displacement threshold here for the simulator (which needs to be much tighter)
   //   than the displacement threshold for the site at low speed testing.
   if (msg->data){
+    simulation_status_ = true;
     displacement_threshold_ = 0.05;
+  } else {
+    simulation_status_ = false;
   }
 }
 
@@ -336,10 +339,16 @@ geometry_msgs::TwistStamped PurePursuit::outputZero() const
   twist.header.stamp = ros::Time::now();
   return twist;
 }
+
 geometry_msgs::TwistStamped PurePursuit::outputTwist(geometry_msgs::Twist t) const
 {
   double g_lateral_accel_limit = 5.0;
   double ERROR = 1e-8;
+
+  if(!simulation_status_){
+    // Decrease accel limit for Carla
+    g_lateral_accel_limit = 2.5;
+  }
 
   geometry_msgs::TwistStamped twist;
   twist.twist = t;

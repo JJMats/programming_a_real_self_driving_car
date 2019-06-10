@@ -77,11 +77,7 @@ int main(int argc, char **argv)
 
     // Publish Displacement Threshold
     std_msgs::Float64 msg;
-    //std::stringstream ss;
-    //ss << pp.getDisplacementThreshold();
-    //msg.data = ss.str();
     msg.data = pp.getDisplacementThreshold();
-
     displacement_thresh_pub.publish(msg);
 
     loop_rate.sleep();
