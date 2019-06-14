@@ -48,6 +48,7 @@ class TLDetector(object):
         self.image_count_thres = 4
         self.stop_for_yellow = False
         self.target_velocity = 0.0
+        self.tl_post_stop_line_view_thresh = 0
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -67,9 +68,8 @@ class TLDetector(object):
         # We may want to use image_raw here to prevent loss of data when changing color schemes
         if self.is_simulation:
             sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
-        else:
-            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
-            #sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
+            self.tl_post_stop_line_view_thresh = -3
+            rospy.logwarn("Post stop line tl view thresh: {0}".format(self.tl_post_stop_line_view_thresh))
 
         rospy.spin()
 
@@ -253,9 +253,9 @@ class TLDetector(object):
                 temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
                 # Find closest stop line waypoint index
                 d = temp_wp_idx - car_wp_idx
-                # Allow a stop up to a short distance into the intersection (3 waypoints) to accommodate
-                #  late light state classifications or stale yellow to red light changes.
-                if d >= -3 and d < diff:
+                # Allow a stop up to a short distance into the intersection to accommodate late light
+                #  state classifications or stale yellow to red light changes in the simulator.
+                if d >= self.tl_post_stop_line_view_thresh and d < diff:
                     diff = d
                     closest_light = light
                     line_wp_idx = temp_wp_idx
