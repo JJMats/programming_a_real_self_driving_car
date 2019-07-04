@@ -11,12 +11,12 @@ In the final project of the Udacity Self-Driving Car Nanodegree, we were tasked 
 
 ## Team Members 
 
-| Name | E-mail | @ Domain | . TLD |
-| :---: | :---: | :---: | :---: |
-| Jeremy Matson | matsonjjl | gmail | com |
-| Mario Lüder | monsieur.mona | gmail | com |
-| Emilio Moyers | emoyersb | gmail | com |
-| Yang Sun | jonathan.eric.sun | gmail | com |
+| Name |
+| :---: |
+| Jeremy Matson |
+| Mario Lüder |
+| Emilio Moyers |
+| Yang Sun |
 
 <br />
 
